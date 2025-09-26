@@ -1,0 +1,52 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports: ["5432:5432"]
+
+  redis:
+    image: redis:7
+    ports: ["6379:6379"]
+
+  emqx:
+    image: emqx/emqx:5.7.0
+    environment:
+      EMQX_DASHBOARD__DEFAULT_USERNAME: admin
+      EMQX_DASHBOARD__DEFAULT_PASSWORD: ${EMQX_PASSWORD}
+    ports:
+      - "1883:1883"
+      - "8083:8083"
+      - "18083:18083"
+    restart: unless-stopped
+
+  api:
+    build: ./backend
+    env_file: .env
+    depends_on: [postgres, redis]
+    ports: ["8000:8000"]
+
+  mqtt-worker:
+    build: ./services/mqtt-worker
+    env_file: .env
+    depends_on: [emqx, api]
+    restart: unless-stopped
+
+  #  # tcp-gateway:
+  #   build: ./services/tcp-gateway
+  #   env_file: .env
+  #   ports: ["5072:5072"]
+  #   depends_on: [api]
+  #
+  # frontend:
+  #   build: ./frontend
+  #   env_file: .env
+  #   ports: ["5173:5173"]
+  #   depends_on: [api]
+
+volumes:
+  pgdata:
