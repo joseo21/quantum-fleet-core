@@ -27,26 +27,18 @@ services:
   api:
     build: ./backend
     env_file: .env
-    depends_on: [postgres, redis]
+    volumes:
+      - ./backend:/app
+    depends_on: [postgres, redis, emqx]
     ports: ["8000:8000"]
 
   mqtt-worker:
     build: ./services/mqtt-worker
     env_file: .env
+    volumes:
+      - ./services/mqtt-worker:/app
     depends_on: [emqx, api]
     restart: unless-stopped
-
-  #  # tcp-gateway:
-  #   build: ./services/tcp-gateway
-  #   env_file: .env
-  #   ports: ["5072:5072"]
-  #   depends_on: [api]
-  #
-  # frontend:
-  #   build: ./frontend
-  #   env_file: .env
-  #   ports: ["5173:5173"]
-  #   depends_on: [api]
 
 volumes:
   pgdata:

@@ -1,3 +1,6 @@
+from fastapi import Depends
+from ..utils.rbac import require_role
+from ..models_rbac import RoleEnum
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from ..database import get_db
