@@ -1,0 +1,166 @@
+from __future__ import annotations
+from datetime import datetime, timezone
+from typing import Dict, Any, Tuple
+
+FMC650_ALLOWED_IO: Dict[int, str] = {
+    239: "Ignition",
+    240: "Movement",
+    21: "GSM Signal",
+    200: "Sleep Mode",
+    71: "GNSS Status",
+    182: "GNSS HDOP",
+    66: "External Voltage",
+    24: "Speed",
+    205: "GSM Cell ID",
+    67: "Battery Voltage",
+    68: "Battery Current",
+    199: "Trip Odometer",
+    216: "Total Odometer",
+    1: "Digital Input 1",
+    9: "Analog Input 1",
+    179: "Digital Output 1",
+    219: "CCID Part1",
+    220: "CCID Part2",
+    221: "CCID Part3",
+    2: "Digital Input 2",
+    3: "Digital Input 3",
+    10: "Analog Input 2",
+    180: "Digital Output 2",
+    72: "Dallas Temperature 1",
+    73: "Dallas Temperature 2",
+    74: "Dallas Temperature 3",
+    75: "Dallas Temperature 4",
+    62: "Dallas Temperature ID 1",
+    63: "Dallas Temperature ID 2",
+    64: "Dallas Temperature ID 3",
+    65: "Dallas Temperature ID 4",
+    78: "iButton",
+    76: "Fuel Counter",
+    10640: "Impulse counter frequency 1",
+    10641: "Impulse counter RPM 1",
+    483: "Impulse Counter 2",
+    10642: "Impulse counter frequency 2",
+    10643: "Impulse counter RPM 2",
+    10911: "Impulse counter value 1",
+    10912: "Impulse counter value 3",
+    10913: "Impulse counter frequency 3",
+    10914: "Impulse counter RPM 3",
+    10915: "Impulse counter value 4",
+    10916: "Impulse counter frequency 4",
+    10917: "Impulse counter RPM 4",
+    4: "Digital Input 4",
+    50: "Digital Output 3",
+    51: "Digital Output 4",
+    11: "Analog Input 3",
+    245: "Analog Input 4",
+    70: "PCB Temperature",
+    5: "Dallas Temperature ID 5",
+    10487: "1Wire Humidity 1",
+    10488: "1Wire Humidity 2",
+    449: "Ignition On Counter",
+    1161: "IMEI",
+    1148: "Connectivity Quality",
+    87: "Fuel Level",
+    88: "Engine Speed",
+    89: "Axle weight 1",
+    90: "Axle weight 2",
+    135: "Fuel Rate",
+    10348: "Fuel level 2",
+    12: "Program Number",
+    13: "Module ID",
+    14: "Engine Worktime",
+    15: "Engine Worktime (Counted)",
+    16: "Total Mileage (Counted)",
+    17: "Fuel Consumed (counted)",
+    18: "Fuel Rate",
+    19: "AdBlue Level Percent",
+    20: "AdBlue Level Liters",
+    23: "Engine Load",
+    25: "Engine Temperature",
+    26: "Axle 1 Load",
+    27: "Axle 2 Load",
+    30: "Vehicle Speed",
+    31: "Accelerator Pedal Position",
+    33: "Fuel Consumed",
+    34: "Fuel Level Liters",
+    35: "Engine RPM",
+    36: "Total Mileage",
+    37: "Fuel Level Percent",
+    141: "Battery Temperature",
+    142: "Battery Level Percent",
+    143: "Door Status",
+    521: "Load Weight",
+    250: "Trip",
+    247: "Crash Detection",
+    251: "Immobilizer",
+    254: "Green Driving Value",
+    249: "Jamming",
+    10611: "RS232_COM1Data",
+    10612: "RS232_COM2Data",
+    191: "Vehicle Speed",
+    192: "Odometer",
+    193: "Trip Distance",
+    194: "Timestamp",
+    10683: "Temperature 1",
+    10684: "Temperature 2",
+    10685: "Temperature 3",
+    10686: "Temperature 4",
+    10687: "Status 1",
+    10688: "Status 2",
+    10691: "Alarm 1",
+    10692: "Alarm 2",
+    10695: "Input 1",
+    10696: "Input 2",
+    10697: "Input 3",
+    10698: "Input 4",
+    701: "BLE Temperature 1",
+    702: "BLE Temperature 2",
+    705: "BLE Battery 1",
+    706: "BLE Battery 2",
+    709: "BLE Humidity 1",
+    710: "BLE Humidity 2",
+}
+
+def _parse_ts(ts):
+    from datetime import datetime, timezone
+    if not ts:
+        return datetime.now(timezone.utc)
+    if isinstance(ts, (int, float)):
+        return datetime.fromtimestamp(float(ts), tz=timezone.utc)
+    if isinstance(ts, str):
+        try:
+            return datetime.fromisoformat(ts.replace("Z", "+00:00")).astimezone(timezone.utc)
+        except Exception:
+            return datetime.now(timezone.utc)
+    return datetime.now(timezone.utc)
+
+def parse_teltonika_fmc650(payload: Dict[str, Any]) -> Tuple[datetime, Dict[str, Any]]:
+    ts = _parse_ts(payload.get("timestamp"))
+    data: Dict[str, Any] = {}
+
+    gps = payload.get("gps")
+    if isinstance(gps, dict):
+        g2 = {}
+        if isinstance(gps.get("lat"), (int, float)): g2["lat"] = gps["lat"]
+        if isinstance(gps.get("lon"), (int, float)): g2["lon"] = gps["lon"]
+        if isinstance(gps.get("speed"), (int, float)): g2["speed"] = gps["speed"]
+        if g2: data["gps"] = g2
+
+    io = payload.get("io")
+    if isinstance(io, dict):
+        ok: Dict[str, Any] = {}
+        rejected: Dict[str, Any] = {}
+        for k, v in io.items():
+            try:
+                key = int(k)
+            except Exception:
+                continue
+            name = FMC650_ALLOWED_IO.get(key)
+            if name is None:
+                rejected[str(key)] = v
+            else:
+                ok[name] = v
+        if ok: data["io"] = ok
+        if rejected: data["rejected_io"] = rejected
+
+    return ts, data

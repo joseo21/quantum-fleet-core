@@ -31,7 +31,8 @@ services:
       - ./backend:/app
     depends_on: [postgres, redis, emqx]
     ports: ["8000:8000"]
-
+    environment:
+      - PYTHONPATH=/app
   mqtt-worker:
     build: ./services/mqtt-worker
     env_file: .env
