@@ -4,6 +4,7 @@ from .routers import tenants, users, devices, ingest_http, telemetry
 from .routers import admin_roles   # 👈 nuevo router de roles
 from .routers import dashboards
 from app.routers.ingest_teltonika import router as ingest_teltonika_router
+from app.routers import telemetry_read
 
 app = FastAPI(title="Quantum Fleet Core", version="0.1.0")
 
@@ -23,6 +24,7 @@ app.include_router(telemetry.router)
 app.include_router(admin_roles.router)  # 👈 registro del router de roles
 app.include_router(dashboards.router)
 app.include_router(ingest_teltonika_router)
+app.include_router(telemetry_read.router)
 
 @app.get("/health")
 def health():

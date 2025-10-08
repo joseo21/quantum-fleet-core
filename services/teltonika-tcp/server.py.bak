@@ -1,0 +1,272 @@
+#!/usr/bin/env python3
+import asyncio
+import struct
+import os
+import json
+import logging
+from typing import Tuple, Dict, Any, List
+
+import requests
+import psycopg  # psycopg v3
+
+logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO"))
+log = logging.getLogger("teltonika-tcp")
+
+# --- Config API
+API_BASE = os.getenv("API_BASE", "http://api:8000")
+INGEST_URL = f"{API_BASE}/ingest/teltonika/ingest"
+REQUEST_TIMEOUT = float(os.getenv("REQUEST_TIMEOUT", "5.0"))
+
+# --- Config listener
+LISTEN_HOST = os.getenv("LISTEN_HOST", "0.0.0.0")
+LISTEN_PORT = int(os.getenv("LISTEN_PORT", "5027"))
+
+# --- Config DB (fallback)
+DB_HOST = os.getenv("DB_HOST", "postgres")
+DB_PORT = int(os.getenv("DB_PORT", "5432"))
+DB_NAME = os.getenv("DB_NAME", "quantumfleet")
+DB_USER = os.getenv("DB_USER", "quantum")
+DB_PASSWORD = os.getenv("DB_PASSWORD", "quantum")
+DEFAULT_TENANT_ID = os.getenv("DEFAULT_TENANT_ID")  # opcional
+
+# ---------- Lectores básicos ----------
+def _u32(data: bytes, pos: int) -> Tuple[int, int]:
+    return struct.unpack(">I", data[pos:pos+4])[0], pos+4
+
+def _u16(data: bytes, pos: int) -> Tuple[int, int]:
+    return struct.unpack(">H", data[pos:pos+2])[0], pos+2
+
+def _u8(data: bytes, pos: int) -> Tuple[int, int]:
+    return data[pos], pos+1
+
+def _i32(data: bytes, pos: int) -> Tuple[int, int]:
+    return struct.unpack(">i", data[pos:pos+4])[0], pos+4
+
+def _i64(data: bytes, pos: int) -> Tuple[int, int]:
+    return struct.unpack(">q", data[pos:pos+8])[0], pos+8
+
+# ---------- Decoder seguro (tolerante a 8/8E) ----------
+def decode_avl_data(data: bytes) -> Tuple[int, int, List[Dict[str,Any]]]:
+    """
+    data = [codec(1)][n1(1)][records...][n2(1)][crc(4)]
+    Devuelve (codec_id, n2, records). Lanza excepción si no alcanza.
+    """
+    if len(data) < 10:
+        raise ValueError("AVL muy corto")
+
+    codec = data[0]
+    n1 = data[1]
+    end = len(data) - 5  # sin n2 + crc
+    pos = 2
+
+    out: List[Dict[str,Any]] = []
+
+    for _ in range(n1):
+        if pos + 8 + 1 > end:
+            raise ValueError("sin espacio para ts/priority")
+        ts_ms, pos = _i64(data, pos)
+        _prio, pos = _u8(data, pos)
+
+        if pos + 4 + 4 + 2 + 2 + 1 + 2 > end:
+            raise ValueError("sin espacio GNSS")
+        lon, pos    = _i32(data, pos)
+        lat, pos    = _i32(data, pos)
+        alt, pos    = _u16(data, pos)
+        ang, pos    = _u16(data, pos)
+        sats, pos   = _u8(data, pos)
+        speed, pos  = _u16(data, pos)
+
+        gps = {
+            "lat": lat / 10000000.0,
+            "lon": lon / 10000000.0,
+            "alt": int(alt),
+            "ang": int(ang),
+            "sat": int(sats),
+            "speed": float(speed),
+        }
+
+        # IO header
+        if pos + 2 > end:
+            raise ValueError("sin espacio IO header")
+        _event_id, pos = _u8(data, pos)
+        _n_total, pos  = _u8(data, pos)
+
+        io: Dict[str,Any] = {}
+
+        # 1 byte values
+        n1b, pos = _u8(data, pos)
+        for _ in range(n1b):
+            kid, pos = _u8(data, pos)
+            val, pos = _u8(data, pos)
+            io[str(kid)] = int(val)
+
+        # 2 byte values
+        n2b, pos = _u8(data, pos)
+        for _ in range(n2b):
+            kid, pos = _u8(data, pos)
+            val, pos = _u16(data, pos)
+            io[str(kid)] = int(val)
+
+        # 4 byte values
+        n4b, pos = _u8(data, pos)
+        for _ in range(n4b):
+            kid, pos = _u8(data, pos)
+            val, pos = _i32(data, pos)
+            io[str(kid)] = int(val)
+
+        # 8 byte values
+        n8b, pos = _u8(data, pos)
+        for _ in range(n8b):
+            kid, pos = _u8(data, pos)
+            val, pos = _i64(data, pos)
+            io[str(kid)] = int(val)
+
+        # Nota: en 8E existen tipos extra (float/double/string). Si vienen,
+        # quedarán fuera del cuerpo y caeremos en ValueError => fallback raw.
+        out.append({"ts": ts_ms, "gps": gps, "io": io})
+
+    # n2 + crc (no avanzamos con pos, tomamos de cola)
+    n2 = data[-5]
+    # crc = data[-4:]  # si se quisiera validar
+
+    return codec, n2, out
+
+# ---------- Fallback DB ----------
+def db_get_conn():
+    return psycopg.connect(
+        host=DB_HOST, port=DB_PORT, dbname=DB_NAME,
+        user=DB_USER, password=DB_PASSWORD,
+        autocommit=True,
+    )
+
+def db_ensure_device(conn, imei: str, tenant_id: int | None):
+    with conn.cursor() as cur:
+        cur.execute(
+            """
+            WITH up AS (
+                INSERT INTO devices (name, external_id, tenant_id)
+                VALUES (%s, %s, %s)
+                ON CONFLICT (external_id) DO UPDATE
+                   SET name = EXCLUDED.name
+                RETURNING id
+            )
+            SELECT id FROM up
+            UNION ALL
+            SELECT id FROM devices WHERE external_id=%s
+            LIMIT 1;
+            """,
+            (f"Teltonika {imei}", imei, tenant_id, imei),
+        )
+        row = cur.fetchone()
+        return row[0]
+
+def db_insert_batch(conn, device_id: int, batch: List[Dict[str,Any]]):
+    with conn.cursor() as cur:
+        for r in batch:
+            ts_ms = int(r.get("ts") or 0)
+            # a falta de tz exacta, server-side to_timestamp(ms/1000)
+            cur.execute(
+                """
+                INSERT INTO telemetry (device_id, ts, data)
+                VALUES (%s, to_timestamp(%s/1000.0), %s::jsonb)
+                """,
+                (device_id, ts_ms, json.dumps(r)),
+            )
+
+async def handle_client(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
+    addr = writer.get_extra_info("peername")
+    log.info("Conexión %s", addr)
+
+    try:
+        # 1) IMEI handshake
+        b_len = await reader.readexactly(2)
+        imei_len = struct.unpack(">H", b_len)[0]
+        imei = (await reader.readexactly(imei_len)).decode("ascii", "ignore").strip()
+        log.info("IMEI=%s", imei)
+
+        # ACK IMEI
+        writer.write(b"\x01")
+        await writer.drain()
+
+        while True:
+            # 2) Header
+            pre = await reader.readexactly(4)  # 00000000
+            if pre != b"\x00\x00\x00\x00":
+                log.warning("Preamble inesperado: %s", pre.hex())
+
+            len_bytes = await reader.readexactly(4)
+            data_len = struct.unpack(">I", len_bytes)[0]
+            data = await reader.readexactly(data_len)  # [codec..n2+crc]
+
+            # 3) ACK INMEDIATO (n2 = quinto byte desde el final)
+            ack = data[-5] if len(data) >= 5 else 0
+            writer.write(struct.pack(">I", ack))
+            await writer.drain()
+
+            # 4) Decode (tolerante). Si falla => mandamos raw.
+            payload = {"external_id": imei}
+            try:
+                codec, n2, records = decode_avl_data(data)
+                payload["codec"] = codec
+                payload["batch"] = records
+                log.info("Paquete codec=0x%02x records=%d", codec, n2)
+            except Exception as e:
+                log.exception("Decode falló, envío raw: %s", e)
+                payload["raw_hex"] = data.hex()
+
+            # 5) Enviar al API, con fallback DB si 404 / error
+            try:
+                r = requests.post(INGEST_URL, json=payload, timeout=REQUEST_TIMEOUT)
+                if r.status_code == 404:
+                    log.error("API %s -> 404 (no existe device). Fallback DB.", INGEST_URL)
+                    # Fallback DB
+                    conn = db_get_conn()
+                    try:
+                        dev_id = db_ensure_device(conn, imei, int(DEFAULT_TENANT_ID) if DEFAULT_TENANT_ID else None)
+                        if "batch" in payload:
+                            db_insert_batch(conn, dev_id, payload["batch"])
+                        else:
+                            # Si solo tenemos raw, creamos un registro básico
+                            db_insert_batch(conn, dev_id, [{"ts": 0, "raw_hex": payload["raw_hex"]}])
+                        log.info("Fallback DB insertado para IMEI=%s (device_id=%s)", imei, dev_id)
+                    finally:
+                        conn.close()
+                elif r.status_code >= 300:
+                    log.error("API %s -> %s %s", INGEST_URL, r.status_code, r.text)
+            except Exception as e:
+                log.exception("Error llamando API: %s", e)
+                # Fallback DB también en errores de red
+                try:
+                    conn = db_get_conn()
+                    dev_id = db_ensure_device(conn, imei, int(DEFAULT_TENANT_ID) if DEFAULT_TENANT_ID else None)
+                    if "batch" in payload:
+                        db_insert_batch(conn, dev_id, payload["batch"])
+                    else:
+                        db_insert_batch(conn, dev_id, [{"ts": 0, "raw_hex": payload["raw_hex"]}])
+                    log.info("Fallback DB (error red) insertado IMEI=%s (device_id=%s)", imei, dev_id)
+                except Exception:
+                    log.exception("Fallback DB también falló")
+
+    except asyncio.IncompleteReadError:
+        log.info("Cliente %s cerró conexión", addr)
+    except Exception as e:
+        log.exception("Error con %s: %s", addr, e)
+    finally:
+        try:
+            writer.close()
+            await writer.wait_closed()
+        except Exception:
+            pass
+
+async def main():
+    server = await asyncio.start_server(handle_client, LISTEN_HOST, LISTEN_PORT)
+    addrs = ", ".join(str(sock.getsockname()) for sock in server.sockets)
+    log.info("Escuchando en %s", addrs)
+    async with server:
+        await server.serve_forever()
+
+if __name__ == "__main__":
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        pass
