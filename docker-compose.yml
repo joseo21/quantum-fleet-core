@@ -42,25 +42,19 @@ services:
     restart: unless-stopped
 
   teltonika-tcp:
-    build: ./services/teltonika-tcp
+    build:
+      context: ./services/teltonika-tcp
     container_name: teltonika-tcp
     environment:
       API_BASE: http://api:8000
+      LOG_LEVEL: DEBUG          # o INFO en prod
       LISTEN_HOST: 0.0.0.0
-      LISTEN_PORT: 5027
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_NAME: ${POSTGRES_DB}
-      DB_USER: ${POSTGRES_USER}
-      DB_PASSWORD: ${POSTGRES_PASSWORD}     # 👈 usa la misma del Postgres real (quantum123)
-      FALLBACK_DB: "1"                      # 👈 opcional: deja 1 para que el fallback sea útil
-      LOG_LEVEL: DEBUG
-      DEFAULT_TENANT_ID: "1"        # si manejas multi-tenant; opcional
-    depends_on:
-      - api
-      - postgres
+      LISTEN_PORT: "5027"
+      REQUEST_TIMEOUT: "5.0"
     ports:
       - "5027:5027"
+    depends_on:
+      - api
 
 
   external-collector:

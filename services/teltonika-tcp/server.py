@@ -1,39 +1,30 @@
 #!/usr/bin/env python3
-import asyncio, struct, json, os, logging
+# -*- coding: utf-8 -*-
+
+import asyncio
+import struct
+import json
+import os
+import logging
 from typing import Tuple, Dict, Any, List, Optional
 
 import requests
+
 try:
-    import psycopg  # fallback opcional a BD
+    import psycopg  # Fallback DB opcional
 except Exception:
     psycopg = None
 
-# ----------------------------------------
-# Logging
-# ----------------------------------------
-logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO"))
+# -------------------------------------------------------------------
+# Configuración
+# -------------------------------------------------------------------
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
+logging.basicConfig(level=LOG_LEVEL, format="%(levelname)s:%(name)s:%(message)s")
 log = logging.getLogger("teltonika-tcp")
 
-# ----------------------------------------
-# Config API / red
-# ----------------------------------------
 API_BASE = os.getenv("API_BASE", "http://api:8000").rstrip("/")
 INGEST_URL = f"{API_BASE}/ingest/teltonika/ingest"
 REQUEST_TIMEOUT = float(os.getenv("REQUEST_TIMEOUT", "5.0"))
-
-# Cabecera multi-tenant opcional
-DEFAULT_TENANT_ID = os.getenv("DEFAULT_TENANT_ID")  # ej: "1"
-
-# ----------------------------------------
-# Config listener TCP
-# ----------------------------------------
-LISTEN_HOST = os.getenv("LISTEN_HOST", "0.0.0.0")
-LISTEN_PORT = int(os.getenv("LISTEN_PORT", "5027"))
-
-# ----------------------------------------
-# Config fallback BD
-# ----------------------------------------
-FALLBACK_DB = os.getenv("FALLBACK_DB", "0") == "1"
 
 DB_HOST = os.getenv("DB_HOST", "postgres")
 DB_PORT = int(os.getenv("DB_PORT", "5432"))
@@ -41,267 +32,279 @@ DB_NAME = os.getenv("DB_NAME", "quantumfleet")
 DB_USER = os.getenv("DB_USER", "quantum")
 DB_PASSWORD = os.getenv("DB_PASSWORD", "quantum")
 
-if FALLBACK_DB and psycopg is None:
-    log.warning("FALLBACK_DB=1 pero psycopg no está disponible; se ignorará fallback.")
+LISTEN_HOST = os.getenv("TCP_HOST", "0.0.0.0")
+LISTEN_PORT = int(os.getenv("TCP_PORT", "5027"))
 
-# ----------------------------------------
-# Lectores utilitarios
-# ----------------------------------------
-def _u8(b: bytes, p: int) -> Tuple[int, int]:
-    return b[p], p + 1
+READ_TIMEOUT = float(os.getenv("READ_TIMEOUT", "15"))  # s
 
-def _u16(b: bytes, p: int) -> Tuple[int, int]:
-    return struct.unpack(">H", b[p:p+2])[0], p + 2
+# -------------------------------------------------------------------
+# Utilidades de lectura binaria
+# -------------------------------------------------------------------
+def _u8(buf: bytes, pos: int) -> Tuple[int, int]:
+    return buf[pos], pos + 1
 
-def _u32(b: bytes, p: int) -> Tuple[int, int]:
-    return struct.unpack(">I", b[p:p+4])[0], p + 4
+def _u16(buf: bytes, pos: int) -> Tuple[int, int]:
+    return struct.unpack_from(">H", buf, pos)[0], pos + 2
 
-def _i32(b: bytes, p: int) -> Tuple[int, int]:
-    return struct.unpack(">i", b[p:p+4])[0], p + 4
+def _u32(buf: bytes, pos: int) -> Tuple[int, int]:
+    return struct.unpack_from(">I", buf, pos)[0], pos + 4
 
-def _i64(b: bytes, p: int) -> Tuple[int, int]:
-    return struct.unpack(">q", b[p:p+8])[0], p + 8
+def _u64(buf: bytes, pos: int) -> Tuple[int, int]:
+    return struct.unpack_from(">Q", buf, pos)[0], pos + 8
 
-# ----------------------------------------
-# Decoder seguro (codec 0x08 y 0x8E)
-# ----------------------------------------
-def decode_avl_data(data: bytes) -> Tuple[int, int, List[Dict[str, Any]]]:
+# CRC16/IBM (polinomio 0xA001, init 0x0000). Teltonika lo almacena en 4 bytes.
+def crc16_ibm(data: bytes) -> int:
+    crc = 0x0000
+    for b in data:
+        crc ^= b
+        for _ in range(8):
+            if (crc & 1) != 0:
+                crc = (crc >> 1) ^ 0xA001
+            else:
+                crc >>= 1
+    return crc & 0xFFFF
+
+async def read_exact(reader: asyncio.StreamReader, n: int) -> bytes:
+    return await asyncio.wait_for(reader.readexactly(n), timeout=READ_TIMEOUT)
+
+# Re-sincroniza leyendo byte a byte hasta encontrar preámbulo 00000000 y luego lee len+payload
+async def read_frame(reader: asyncio.StreamReader) -> Tuple[int, bytes]:
+    zeros = 0
+    discarded = 0
+    # Busca 4 ceros consecutivos (preamble)
+    while zeros < 4:
+        b = await read_exact(reader, 1)
+        if b == b"\x00":
+            zeros += 1
+        else:
+            discarded += 1
+            zeros = 0
+            # no log con nivel WARNING para no ensuciar; deja DEBUG si se necesita
+            # log.debug("Descartado byte: %s", b.hex())
+
+    # Lee longitud (4 bytes big-endian)
+    len_bytes = await read_exact(reader, 4)
+    data_len = struct.unpack(">I", len_bytes)[0]
+
+    if discarded and log.isEnabledFor(logging.DEBUG):
+        log.debug("Re-sincronizado tras descartar %d bytes", discarded)
+
+    if data_len < 0:
+        raise ValueError("Longitud negativa no válida")
+    if data_len == 0:
+        return 0, b""
+
+    payload = await read_exact(reader, data_len)
+    return data_len, payload
+
+# -------------------------------------------------------------------
+# Decodificación tolerante de payload Codec8
+# -------------------------------------------------------------------
+def decode_avl_payload(payload: bytes) -> Tuple[int, int, List[Dict[str, Any]], bool]:
     """
-    data = [codec(1)][n1(1)][records...][n2(1)]
-    Devuelve (codec, n2, records). Lanza ValueError si el buffer es inconsistente.
+    Devuelve: (codec, nrecords, records[], crc_ok)
+    Tolerante a CRC ausente/truncado y a N2 != N1.
     """
-    if len(data) < 3:
-        raise ValueError("AVL muy corto")
+    if len(payload) < 2:
+        raise ValueError("AVL demasiado corto")
 
-    codec = data[0]
-    if codec not in (0x08, 0x8E):
-        raise ValueError(f"Codec no soportado: 0x{codec:02x}")
-
-    n1 = data[1]
-    n2 = data[-1]
-    end = len(data) - 1  # último índice que no podemos sobrepasar (antes de n2)
+    codec = payload[0]
+    n1 = payload[1]
     pos = 2
 
-    out: List[Dict[str, Any]] = []
+    records: List[Dict[str, Any]] = []
 
     for _ in range(n1):
-        # ts(8) + priority(1)
-        if pos + 9 > end:
-            raise ValueError("sin espacio para ts/priority")
-        ts_ms, pos = _i64(data, pos)
-        _prio, pos = _u8(data, pos)
-
-        # GNSS: lon(4) lat(4) alt(2) ang(2) sats(1) speed(2) = 15 bytes
-        if pos + 15 > end:
-            raise ValueError("sin espacio para GNSS")
-        lon, pos = _i32(data, pos)
-        lat, pos = _i32(data, pos)
-        alt, pos = _u16(data, pos)
-        ang, pos = _u16(data, pos)
-        sats, pos = _u8(data, pos)
-        speed, pos = _u16(data, pos)
+        ts, pos = _u64(payload, pos)
+        prio, pos = _u8(payload, pos)
+        lng, pos = _u32(payload, pos)
+        lat, pos = _u32(payload, pos)
+        alt, pos = _u16(payload, pos)
+        ang, pos = _u16(payload, pos)
+        sats, pos = _u8(payload, pos)
+        spd, pos = _u16(payload, pos)
 
         gps = {
-            "lat": lat / 1e7,
-            "lon": lon / 1e7,
-            "alt": int(alt),
-            "ang": int(ang),
-            "sat": int(sats),
-            "speed": float(speed),
+            "lat": (lat if lat <= 0x7FFFFFFF else lat - 0x100000000) / 10_000_000.0,
+            "lon": (lng if lng <= 0x7FFFFFFF else lng - 0x100000000) / 10_000_000.0,
+            "alt": alt,
+            "ang": ang,
+            "sat": sats,
+            "speed": float(spd),
         }
 
-        # IO header: event_id (2 bytes en 8E; 1 byte en 08) + total(1)
-        # Para simplificar (tolerante): leer 2 bytes si entran; si no, caer a 1 byte.
-        if pos + 2 > end:
-            raise ValueError("sin espacio para IO header")
-        # Intentar 2 bytes (8E)
-        event_id = None
-        try:
-            if codec == 0x8E:
-                event_id, pos = _u16(data, pos)
-            else:
-                # Codec 8 clásico suele usar 1 byte; si usamos 2, puede quedar inconsistente.
-                eid, pos_try = _u8(data, pos)
-                event_id, pos = int(eid), pos_try
-        except Exception:
-            # Fallback extremo: un byte
-            eid, pos = _u8(data, pos)
-            event_id = int(eid)
+        event_id, pos = _u8(payload, pos)
+        total_io, pos = _u8(payload, pos)
 
-        if pos + 1 > end:
-            raise ValueError("sin espacio para IO total")
-        _total, pos = _u8(data, pos)
-
-        # IO por tamaños
         io: Dict[str, Any] = {}
 
-        n1b, pos = _u8(data, pos)
-        for _ in range(n1b):
-            kid, pos = _u8(data, pos)
-            val, pos = _u8(data, pos)
-            io[str(kid)] = int(val)
+        c1, pos = _u8(payload, pos)
+        for _i in range(c1):
+            _id, pos = _u8(payload, pos)
+            _val, pos = _u8(payload, pos)
+            io[str(_id)] = _val
 
-        n2b, pos = _u8(data, pos)
-        for _ in range(n2b):
-            kid, pos = _u8(data, pos)
-            val, pos = _u16(data, pos)
-            io[str(kid)] = int(val)
+        c2, pos = _u8(payload, pos)
+        for _i in range(c2):
+            _id, pos = _u8(payload, pos)
+            _val, pos = _u16(payload, pos)
+            io[str(_id)] = _val
 
-        n4b, pos = _u8(data, pos)
-        for _ in range(n4b):
-            kid, pos = _u8(data, pos)
-            val, pos = _i32(data, pos)
-            io[str(kid)] = int(val)
+        c4, pos = _u8(payload, pos)
+        for _i in range(c4):
+            _id, pos = _u8(payload, pos)
+            _val, pos = _u32(payload, pos)
+            io[str(_id)] = _val
 
-        n8b, pos = _u8(data, pos)
-        for _ in range(n8b):
-            kid, pos = _u8(data, pos)
-            val, pos = _i64(data, pos)
-            io[str(kid)] = int(val)
+        c8, pos = _u8(payload, pos)
+        for _i in range(c8):
+            _id, pos = _u8(payload, pos)
+            _val, pos = _u64(payload, pos)
+            io[str(_id)] = _val
 
-        out.append({"ts": ts_ms, "gps": gps, "io": io, "event_id": event_id})
+        records.append({
+            "ts": ts,
+            "event_id": event_id,
+            "prio": prio,
+            "gps": gps,
+            "io": io,
+        })
 
-    return codec, n2, out
+    # N2 tolerante
+    if pos >= len(payload):
+        n2 = n1
+        crc_ok = False
+        return codec, n1, records, crc_ok
 
-# ----------------------------------------
-# Fallback DB helpers
-# ----------------------------------------
+    n2, pos = _u8(payload, pos)
+    if n2 != n1 and log.isEnabledFor(logging.DEBUG):
+        log.debug("n2 != n1 (%d != %d), continúo tolerante", n2, n1)
+
+    # CRC opcional (4 bytes)
+    if pos + 4 <= len(payload):
+        crc_recv, pos = _u32(payload, pos)
+        crc_calc = crc16_ibm(payload[:-4])
+        crc_ok = ((crc_recv & 0xFFFF) == crc_calc)
+    else:
+        if log.isEnabledFor(logging.DEBUG):
+            log.debug("CRC ausente o truncado")
+        crc_ok = False
+
+    return codec, n1, records, crc_ok
+
+# -------------------------------------------------------------------
+# Persistencia (API + fallback DB)
+# -------------------------------------------------------------------
+def api_ingest(imei: str, rec: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    body = {
+        "external_id": imei,
+        "ts": rec["ts"],
+        "gps": rec["gps"],
+        "io": rec["io"],
+        "event_id": rec.get("event_id", 0),
+    }
+    try:
+        r = requests.post(INGEST_URL, json=body, timeout=REQUEST_TIMEOUT)
+        if r.status_code == 200:
+            return r.json()
+        log.error("API %s => %s %s", INGEST_URL, r.status_code, r.text[:200])
+    except Exception as e:
+        log.error("Error llamando API: %s", e)
+    return None
+
 def db_get_conn():
-    if not FALLBACK_DB:
-        raise RuntimeError("Fallback DB deshabilitado")
     if psycopg is None:
-        raise RuntimeError("psycopg no disponible")
+        raise RuntimeError("psycopg no disponible en la imagen")
     return psycopg.connect(
         host=DB_HOST, port=DB_PORT, dbname=DB_NAME,
         user=DB_USER, password=DB_PASSWORD, autocommit=True
     )
 
-def db_ensure_device(conn, imei: str, tenant_id: Optional[int]) -> int:
+def db_ensure_device(conn, imei: str) -> int:
     with conn.cursor() as cur:
-        cur.execute(
-            """
-            WITH up AS (
-              INSERT INTO devices (name, external_id, tenant_id)
-              VALUES (%s, %s, %s)
-              ON CONFLICT (external_id) DO UPDATE SET name = EXCLUDED.name
-              RETURNING id
-            )
-            SELECT id FROM up
-            UNION ALL
-            SELECT id FROM devices WHERE external_id = %s
-            LIMIT 1
-            """,
-            (f"teltonika {imei}", imei, tenant_id, imei),
-        )
+        cur.execute("""
+            INSERT INTO devices (name, external_id)
+            VALUES (%s, %s)
+            ON CONFLICT (external_id) DO NOTHING;
+        """, (f"FMC650 {imei}", imei))
+        cur.execute("SELECT id FROM devices WHERE external_id=%s;", (imei,))
         row = cur.fetchone()
+        if not row:
+            raise RuntimeError("No se pudo obtener/crear device")
         return int(row[0])
 
-def db_insert_batch(conn, device_id: int, batch: List[Dict[str, Any]]):
+def db_insert_telemetry(conn, device_id: int, rec: Dict[str, Any]):
     with conn.cursor() as cur:
-        for r in batch:
-            ts_ms = int(r.get("ts") or 0)
-            cur.execute(
-                "INSERT INTO telemetry (device_id, ts, data) "
-                "VALUES (%s, to_timestamp(%s/1000.0), %s::jsonb)",
-                (device_id, ts_ms, json.dumps(r)),
-            )
+        cur.execute("""
+            INSERT INTO telemetry (device_id, ts, data)
+            VALUES (%s, to_timestamp(%s/1000.0), %s::jsonb)
+        """, (device_id, rec["ts"], json.dumps({
+            "gps": rec["gps"], "io": rec["io"], "event_id": rec.get("event_id", 0)
+        })))
 
-# ----------------------------------------
-# Protocolo Teltonika TCP
-# ----------------------------------------
+# -------------------------------------------------------------------
+# Servidor
+# -------------------------------------------------------------------
 async def handle_client(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
-    addr = writer.get_extra_info("peername")
-    log.info("Conexión %s", addr)
-
+    peer = writer.get_extra_info("peername")
     try:
-        # 1) IMEI handshake
-        b_len = await reader.readexactly(2)
-        imei_len = struct.unpack(">H", b_len)[0]
-        imei = (await reader.readexactly(imei_len)).decode("ascii", "ignore").strip()
-        log.info("IMEI=%s", imei)
+        # Handshake IMEI
+        imei_len_b = await read_exact(reader, 2)
+        imei_len = struct.unpack(">H", imei_len_b)[0]
+        imei_b = await read_exact(reader, imei_len)
+        imei = imei_b.decode("ascii", errors="ignore")
+        log.info("Conexión %s IMEI=%s", peer, imei)
 
-        # ACK IMEI (01)
+        # ACK IMEI ok
         writer.write(b"\x01")
         await writer.drain()
 
-        # 2) Loop de paquetes AVL
         while True:
-            # header: preamble(4) + data_length(4)
-            header = await reader.readexactly(8)
-            pre, data_len = struct.unpack(">II", header)
-            if pre != 0:
-                log.warning("Preamble inesperado: %08x", pre)
-                # seguir leyendo hasta el próximo paquete
+            data_len, payload = await read_frame(reader)
+
+            if data_len == 0:
+                # Keep-alive / frame vacío por diseño → ACK=0 y continuar sin warnings
+                writer.write(struct.pack(">I", 0))
+                await writer.drain()
+                if log.isEnabledFor(logging.INFO):
+                    log.info("Frame vacío (len=0): ACK=0, continuo…")
                 continue
 
-            data = await reader.readexactly(data_len)  # codec..records..n2
-            _crc = await reader.readexactly(4)         # CRC (no validado)
-
-            # ACK = n2 (último byte) en 4 bytes big-endian
-            ack = data[-1] if data else 0
-            writer.write(struct.pack(">I", ack))
-            await writer.drain()
-
-            # Armar payload para API
-            payload: Dict[str, Any] = {"external_id": imei}
-            headers = {}
-            if DEFAULT_TENANT_ID:
-                headers["X-Tenant-Id"] = DEFAULT_TENANT_ID  # mayúscula por convención
-
-            # Decodificar tolerante; si falla, mandar raw
+            n_saved = 0
             try:
-                codec, n2, records = decode_avl_data(data)
-                payload["codec"] = codec
-                payload["batch"] = records
-                log.info("Paquete codec=0x%02x records=%d", codec, n2)
-            except Exception as e:
-                log.exception("Decode falló, envío raw: %s", e)
-                payload["raw_hex"] = data.hex()
+                codec, n1, records, crc_ok = decode_avl_payload(payload)
+                log.info("Paquete codec=0x%02X records=%d (crc_ok=%s)", codec, n1, crc_ok)
 
-            # Enviar a API; fallback para cualquier estado >= 300 o error de red
-            try:
-                r = requests.post(INGEST_URL, json=payload, headers=headers, timeout=REQUEST_TIMEOUT)
-                if r.status_code >= 300:
-                    log.error("API %s => %s %s", INGEST_URL, r.status_code, r.text)
-                    if FALLBACK_DB:
+                for rec in records:
+                    ok = api_ingest(imei, rec)
+                    if ok is None:
                         try:
                             conn = db_get_conn()
                             try:
-                                dev_id = db_ensure_device(
-                                    conn, imei, int(DEFAULT_TENANT_ID) if DEFAULT_TENANT_ID else None
-                                )
-                                if "batch" in payload:
-                                    db_insert_batch(conn, dev_id, payload["batch"])
-                                else:
-                                    db_insert_batch(conn, dev_id, [{"ts": 0, "raw_hex": payload["raw_hex"]}])
+                                dev_id = db_ensure_device(conn, imei)
+                                db_insert_telemetry(conn, dev_id, rec)
+                                n_saved += 1
                                 log.info("Fallback DB insertado IMEI=%s (device_id=%s)", imei, dev_id)
                             finally:
                                 conn.close()
-                        except Exception:
-                            log.exception("Fallback DB falló")
+                        except Exception as db_e:
+                            log.error("Fallback DB falló: %s", db_e)
+                    else:
+                        n_saved += 1
+
             except Exception as e:
-                log.exception("Error llamando API: %s", e)
-                if FALLBACK_DB:
-                    try:
-                        conn = db_get_conn()
-                        try:
-                            dev_id = db_ensure_device(
-                                conn, imei, int(DEFAULT_TENANT_ID) if DEFAULT_TENANT_ID else None
-                            )
-                            if "batch" in payload:
-                                db_insert_batch(conn, dev_id, payload["batch"])
-                            else:
-                                db_insert_batch(conn, dev_id, [{"ts": 0, "raw_hex": payload.get("raw_hex", "")}])
-                            log.info("Fallback DB (error de red) insertado IMEI=%s (device_id=%s)", imei, dev_id)
-                        finally:
-                            conn.close()
-                    except Exception:
-                        log.exception("Fallback DB también falló")
+                log.error("Decode falló: %s", e)
+                writer.write(struct.pack(">I", 0))
+                await writer.drain()
+                continue
+
+            writer.write(struct.pack(">I", n_saved))
+            await writer.drain()
 
     except asyncio.IncompleteReadError:
-        log.info("Cliente %s cerró conexión", addr)
+        log.info("Cliente %s cerró conexión", peer)
     except Exception as e:
-        log.exception("Error con %s: %s", addr, e)
+        log.exception("Error con %s: %s", peer, e)
     finally:
         try:
             writer.close()
@@ -311,13 +314,17 @@ async def handle_client(reader: asyncio.StreamReader, writer: asyncio.StreamWrit
 
 async def main():
     server = await asyncio.start_server(handle_client, LISTEN_HOST, LISTEN_PORT)
-    addrs = ", ".join(str(s.getsockname()) for s in server.sockets)
-    log.info("Escuchando en %s", addrs)
+    addr = ", ".join(str(sock.getsockname()) for sock in (server.sockets or []))
+    log.info("Escuchando en (%s, %s)", LISTEN_HOST, LISTEN_PORT)
     async with server:
         await server.serve_forever()
 
 if __name__ == "__main__":
     try:
-        asyncio.run(main())
-    except KeyboardInterrupt:
+        import uvloop
+        uvloop.install()
+    except Exception:
         pass
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop.run_until_complete(main())
