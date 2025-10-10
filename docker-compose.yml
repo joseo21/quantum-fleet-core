@@ -66,6 +66,12 @@ services:
       STATE_FILE: /data/state.json
       IO_NAME_TO_ID: '{"externalVoltage":"66","ignition":"239"}'
       SOURCES_FILE: /etc/collector/sources.json
+      # Dónde está tu API (ya la tienes corriendo en :8000)
+      AUDIT_API_BASE_URL: "http://api:8000"
+      # (opcional) Si tu API exige una API Key/JWT para /audit/events:
+      AUDIT_API_TOKEN: ""     # deja vacío si no usas auth
+      # (opcional) Desactivar auditoría sin tocar código
+      AUDIT_ENABLED: "1"      # "0" para deshabilitar
     volumes:
       - ./services/external-collector/sources.json:/etc/collector/sources.json:ro
       - ./data/collector:/data

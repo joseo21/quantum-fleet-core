@@ -26,6 +26,11 @@ API_BASE = os.getenv("API_BASE", "http://api:8000").rstrip("/")
 INGEST_URL = f"{API_BASE}/ingest/teltonika/ingest"
 REQUEST_TIMEOUT = float(os.getenv("REQUEST_TIMEOUT", "5.0"))
 
+# Auditoría (opcional)
+AUDIT_ENABLED = os.getenv("AUDIT_ENABLED", "1").lower() in ("1", "true", "yes", "on")
+AUDIT_URL = f"{API_BASE}/audit/emit"
+AUDIT_TIMEOUT = float(os.getenv("AUDIT_TIMEOUT", "3.0"))
+
 DB_HOST = os.getenv("DB_HOST", "postgres")
 DB_PORT = int(os.getenv("DB_PORT", "5432"))
 DB_NAME = os.getenv("DB_NAME", "quantumfleet")
@@ -79,7 +84,6 @@ async def read_frame(reader: asyncio.StreamReader) -> Tuple[int, bytes]:
         else:
             discarded += 1
             zeros = 0
-            # no log con nivel WARNING para no ensuciar; deja DEBUG si se necesita
             # log.debug("Descartado byte: %s", b.hex())
 
     # Lee longitud (4 bytes big-endian)
@@ -243,10 +247,51 @@ def db_insert_telemetry(conn, device_id: int, rec: Dict[str, Any]):
         })))
 
 # -------------------------------------------------------------------
+# Auditoría (emisión de eventos a la API)
+# -------------------------------------------------------------------
+def audit_emit(
+    action: str,
+    *,
+    actor_type: str = "device",
+    actor_id: Optional[str] = None,
+    target_type: Optional[str] = None,
+    target_id: Optional[str] = None,
+    ip: Optional[str] = None,
+    user_agent: Optional[str] = None,
+    meta: Optional[Dict[str, Any]] = None,
+) -> None:
+    """
+    Envía un evento a POST /audit/emit (si está habilitado).
+    No rompe el flujo si falla: loguea en DEBUG y sigue.
+    """
+    if not AUDIT_ENABLED:
+        return
+    payload = {
+        "actor_type": actor_type,
+        "actor_id": actor_id,
+        "action": action,
+        "target_type": target_type,
+        "target_id": target_id,
+        "ip": ip,
+        "user_agent": user_agent,
+        "meta": meta or {},
+    }
+    try:
+        r = requests.post(AUDIT_URL, json=payload, timeout=AUDIT_TIMEOUT)
+        if r.status_code >= 300:
+            if log.isEnabledFor(logging.DEBUG):
+                log.debug("Audit emit %s => %s %s", action, r.status_code, r.text[:200])
+    except Exception as e:
+        if log.isEnabledFor(logging.DEBUG):
+            log.debug("Audit emit error (%s): %s", action, e)
+
+# -------------------------------------------------------------------
 # Servidor
 # -------------------------------------------------------------------
 async def handle_client(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
     peer = writer.get_extra_info("peername")
+    connected = False
+    imei = None
     try:
         # Handshake IMEI
         imei_len_b = await read_exact(reader, 2)
@@ -258,6 +303,21 @@ async def handle_client(reader: asyncio.StreamReader, writer: asyncio.StreamWrit
         # ACK IMEI ok
         writer.write(b"\x01")
         await writer.drain()
+
+        # Auditoría: conectado
+        connected = True
+        try:
+            ip_str = peer[0] if isinstance(peer, tuple) and len(peer) >= 1 else None
+        except Exception:
+            ip_str = None
+        audit_emit(
+            "device.connected",
+            actor_id=imei,
+            target_type="device",
+            target_id=imei,
+            ip=ip_str,
+            meta={"port": (peer[1] if isinstance(peer, tuple) and len(peer) >= 2 else None)},
+        )
 
         while True:
             data_len, payload = await read_frame(reader)
@@ -306,6 +366,20 @@ async def handle_client(reader: asyncio.StreamReader, writer: asyncio.StreamWrit
     except Exception as e:
         log.exception("Error con %s: %s", peer, e)
     finally:
+        # Auditoría: desconectado (si llegó a autenticar IMEI y marcamos conectado)
+        if connected and imei:
+            try:
+                ip_str = peer[0] if isinstance(peer, tuple) and len(peer) >= 1 else None
+            except Exception:
+                ip_str = None
+            audit_emit(
+                "device.disconnected",
+                actor_id=imei,
+                target_type="device",
+                target_id=imei,
+                ip=ip_str,
+                meta={"reason": "socket_closed"},
+            )
         try:
             writer.close()
             await writer.wait_closed()
@@ -328,3 +402,4 @@ if __name__ == "__main__":
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     loop.run_until_complete(main())
+
