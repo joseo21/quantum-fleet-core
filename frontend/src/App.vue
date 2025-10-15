@@ -4,7 +4,7 @@
     <AppSidebar v-model:isOpen="isSidebarOpen" />
 
     <!-- Contenido principal -->
-    <main class="flex-1 p-4 overflow-auto bg-white dark:bg-gray-900">
+    <main class="flex-1 p-4 overflow-auto bg-gray-900">
       <!-- Hamburger visible en mobile -->
       <button
         class="md:hidden mb-4 text-2xl text-white justify-center w-8 rounded-md bg-[#152c87] hover:bg-[#ff6600]"
@@ -13,8 +13,8 @@
         ☰
       </button>
 
-      <div class="w-full h-full bg-slate-100 dark:bg-gray-800 rounded-lg p-4">
-        <h1 class="text-xl font-bold text-gray-900 dark:text-white">Contenido Principal</h1>
+      <div class="w-full h-full bg-gray-800 rounded-lg p-4">
+        <h1 class="text-xl font-bold text-white">Contenido Principal</h1>
       </div>
     </main>
   </div>
