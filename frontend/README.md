@@ -54,20 +54,23 @@ frontend/
 └── tailwind.config.js
 
 
+```
 
 ⚙️ Instalación y configuración
+
 1️⃣ Clonar el repositorio
+```plaintext
 git clone https://github.com/tuusuario/vue3-dashboard.git
 cd vue3-dashboard
-
+```
 2️⃣ Instalar dependencias
-
+```plaintext
 npm install
-
+```
 3️⃣ Iniciar el servidor de desarrollo
-
+```plaintext
 npm run serve
-
+```
 
 La aplicación se abrirá automáticamente en:
 👉 http://localhost:8080
