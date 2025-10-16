@@ -1,30 +1,40 @@
-📊 Vue 3 Admin Dashboard
+# 📊 Vue 3 Admin Dashboard
 
-Este proyecto es un panel de administración moderno construido con Vue 3, Tailwind CSS y Vue Router.
-Cuenta con un diseño responsivo, barra lateral desplegable, encabezado editable con foto de perfil, y navegación dinámica entre vistas.
+Un panel de administración moderno construido con **Vue 3**, **Tailwind CSS** y **Vue Router**.  
+Cuenta con diseño responsivo, barra lateral desplegable, encabezado editable con foto de perfil y navegación dinámica entre vistas.
 
-🚀 Características principales
+---
 
-🧱 Arquitectura Vue 3 (Composition API)
-Estructura modular y mantenible con componentes reutilizables (AppHeader, AppSidebar, etc.).
+## 🚀 Características principales
 
-🎨 Tailwind CSS
-Estilos modernos, totalmente responsive y personalizables.
+### 🧱 Arquitectura Vue 3 (Composition API)
+- Estructura modular y mantenible.
+- Componentes reutilizables (`AppHeader`, `AppSidebar`, etc.).
 
-🧭 Vue Router 4
-Sistema de rutas SPA para navegar entre vistas como Dashboard y Empresas.
+### 🎨 Tailwind CSS
+- Estilos modernos y totalmente responsive.
+- Fácilmente personalizable.
 
-👤 Perfil editable
-Permite cambiar la foto de perfil, almacenándola localmente en localStorage.
+### 🧭 Vue Router 4
+- Sistema de rutas SPA.
+- Navegación fluida entre vistas como **Dashboard** y **Empresas**.
 
-📱 Responsive Design
-Sidebar colapsable en dispositivos móviles mediante menú hamburguesa.
+### 👤 Perfil editable
+- Permite cambiar la foto de perfil.
+- Almacenamiento local mediante `localStorage`.
 
-🔒 Estructura lista para autenticación
-Incluye lógica base para logout y control de sesión.
+### 📱 Responsive Design
+- Sidebar colapsable en dispositivos móviles.
+- Menú tipo hamburguesa.
 
-🧩 Estructura del proyecto
+### 🔒 Estructura lista para autenticación
+- Incluye lógica base para logout y control de sesión.
 
+---
+
+## 🧩 Estructura del proyecto
+
+```plaintext
 frontend/
 ├── src/
 │   ├── assets/
@@ -42,6 +52,7 @@ frontend/
 ├── package.json
 ├── postcss.config.js
 └── tailwind.config.js
+
 
 
 ⚙️ Instalación y configuración
