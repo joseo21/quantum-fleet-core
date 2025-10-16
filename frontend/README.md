@@ -71,79 +71,78 @@ npm install
 ```plaintext
 npm run serve
 ```
+La aplicación se abrirá automáticamente en:  
+👉 [http://localhost:8080](http://localhost:8080)
 
-La aplicación se abrirá automáticamente en:
-👉 http://localhost:8080
+---
 
+## 🧠 Estructura de componentes principales
 
-🧠 Estructura de componentes principales
-🔹 AppHeader.vue
-
+### 🔹 `AppHeader.vue`
 Encabezado superior con:
+- Logo corporativo  
+- Botón de menú móvil  
+- Perfil editable (imagen y dropdown)  
+- Opción de cerrar sesión
 
-Logo corporativo
-
-Botón de menú móvil
-
-Perfil editable (imagen y dropdown)
-
-Opción de cerrar sesión
-
-🔹 AppSidebar.vue
-
+### 🔹 `AppSidebar.vue`
 Barra lateral con:
+- Menú de navegación dinámico (Dashboard, Empresas, etc.)  
+- Adaptación automática en pantallas pequeñas  
+- Control de apertura/cierre mediante `v-model:isOpen`
 
-Menú de navegación dinámico (Dashboard, Empresas, etc.)
+### 🔹 `AdminDashboard.vue`
+Vista principal con:
+- Tarjetas resumen (ventas, costos, usuarios, productos).
 
-Adaptación automática en pantallas pequeñas
+### 🔹 `Empresas.vue`
+- Tabla base para listar empresas.  
+- Lista para conectarse a datos dinámicos.
 
-Control de apertura/cierre mediante v-model:isOpen
+---
 
-🔹 AdminDashboard.vue
+## 🧰 Dependencias principales
 
-Vista principal con tarjetas resumen (ventas, costos, usuarios, productos).
+| Dependencia        | Versión  | Descripción                 |
+| ------------------- | -------- | --------------------------- |
+| **vue**             | ^3.2.13  | Framework principal         |
+| **vue-router**      | ^4.6.3   | Sistema de rutas SPA        |
+| **tailwindcss**     | ^3.x     | Framework CSS moderno       |
+| **autoprefixer**    | ^10.x    | Compatibilidad de estilos   |
+| **postcss**         | ^8.x     | Procesador de estilos       |
 
-🔹 Empresas.vue
+---
 
-Tabla base para listar empresas, lista para conectarse a datos dinámicos.
-🧰 Dependencias principales
+## 🧾 Scripts disponibles
 
-| Dependencia      | Versión | Descripción               |
-| ---------------- | ------- | ------------------------- |
-| **vue**          | ^3.2.13 | Framework principal       |
-| **vue-router**   | ^4.6.3  | Sistema de rutas SPA      |
-| **tailwindcss**  | ^3.x    | Framework CSS moderno     |
-| **autoprefixer** | ^10.x   | Compatibilidad de estilos |
-| **postcss**      | ^8.x    | Procesador de estilos     |
+| Comando           | Descripción                          |
+| ------------------ | ------------------------------------ |
+| `npm run serve`    | Inicia el entorno de desarrollo      |
+| `npm run build`    | Compila para producción              |
+| `npm run lint`     | Ejecuta análisis de código (ESLint)  |
 
+---
 
-🧾 Scripts disponibles
+## 🧑‍💻 Próximas mejoras sugeridas
 
-| Comando         | Descripción                         |
-| --------------- | ----------------------------------- |
-| `npm run serve` | Inicia el entorno de desarrollo     |
-| `npm run build` | Compila para producción             |
-| `npm run lint`  | Ejecuta análisis de código (ESLint) |
+- 🔐 Integración con sistema de login real.  
+- 🧾 Conexión de la vista Empresas con una API o base de datos.  
+- 📊 Incorporación de gráficos con **Chart.js** o **ECharts**.  
+- 🌙 Modo oscuro completo (Dark Mode persistente).
 
-🧑‍💻 Próximas mejoras sugeridas
+---
 
-🔐 Integración con sistema de login real.
+## 🖋️ Autor
 
-🧾 Conexión de la vista Empresas con una API o base de datos.
-
-📊 Incorporación de gráficos con Chart.js o ECharts.
-
-🌙 Modo oscuro completo (Dark Mode persistente).
-
-🖋️ Autor
-
-Sebastián Suazo Parada
+**Sebastián Suazo Parada**  
 Proyecto desarrollado como panel administrativo base en Vue 3.
 
-🪪 Licencia
+---
 
-Este proyecto se distribuye bajo la licencia MIT.
+## 🪪 Licencia
+
+Este proyecto se distribuye bajo la licencia **MIT**.  
 Eres libre de usarlo, modificarlo y adaptarlo según tus necesidades.
 
-damelo en formato .md
+
 
