@@ -1,45 +1,45 @@
 <template>
-  <div class="flex flex-col  p-4">
+  <div class="flex flex-col p-4">
     <!-- Navbar -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-gray-700 pb-2">
       <div class="w-full sm:flex-1">
         <input v-model="searchTerm" type="text" placeholder="Buscar empresa..."
-          class="w-full px-3 py-1  text-gray-900 focus:outline-none focus:ring focus:ring-gray-500" />
+          class="w-full px-3 py-1 text-gray-900 focus:outline-none focus:ring focus:ring-gray-500 rounded" />
       </div>
-      <div class="w-full sm:w-auto mt-2 sm:mt-0">
-        <a href="#_" @click.prevent="showAddModal = true"
-          class="relative inline-flex w-full sm:w-auto items-center justify-center px-3 py-2 overflow-hidden font-mono font-medium tracking-tighter text-white bg-gray-800 rounded-lg group">
+
+      <div class="flex w-full sm:w-auto gap-2 mt-2 sm:mt-0">
+        <button @click.prevent="showAddModal = true"
+          class="relative inline-flex items-center justify-center w-full sm:w-auto px-3 py-2 font-mono font-medium tracking-tighter text-white bg-gray-800 rounded-lg overflow-hidden group">
           <span
-            class="absolute w-0 h-0 transition-all duration-500 ease-out bg-[#ff6600] rounded-full group-hover:w-56 group-hover:h-56"></span>
+            class="absolute w-0 h-0 bg-[#ff6600] rounded-full transition-all duration-500 ease-out group-hover:w-56 group-hover:h-56"></span>
           <span
-            class="absolute inset-0 w-full h-full -mt-1 rounded-lg opacity-30 bg-gradient-to-b from-transparent via-transparent to-gray-700"></span>
+            class="absolute inset-0 w-full h-full opacity-30 bg-gradient-to-b from-transparent via-transparent to-gray-700 rounded-lg -mt-1"></span>
           <span class="relative">➕ Agregar Empresa</span>
-        </a>
+        </button>
 
-
+        <!-- Botón eliminar seleccionados -->
+        <transition name="fade-scale">
+          <button v-if="selectedIds.length > 0" @click="deleteSelected"
+            class="bg-red-600 hover:bg-red-700 text-white p-2 rounded flex items-center justify-center"
+            title="Eliminar seleccionados">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+              stroke-width="2" class="w-5 h-5">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M10 3h4a1 1 0 011 1v1H9V4a1 1 0 011-1z" />
+            </svg>
+          </button>
+        </transition>
       </div>
     </div>
 
-
-
-    <!-- 📊 Contenedor de tabla (altura fija) -->
+    <!-- 📊 Tabla -->
     <div class="flex-1 mt-4 flex flex-col">
       <div class="overflow-y-auto min-h-[400px] max-h-[400px] rounded-lg shadow flex-1">
         <table class="min-w-full bg-gray-800 text-white">
           <thead>
             <tr class="bg-[#102372] text-left">
-              <!-- Checkbox global + botón eliminar todos -->
-              <th class="py-2 px-4 w-1/12 flex items-center gap-1" title="Seleccionar todo">
+              <th class="py-6 px-4 w-1/12 flex items-center gap-1">
                 <input type="checkbox" v-model="selectAll" @change="toggleSelectAll" />
-                <button @click="deleteSelected"
-                  class="bg-red-600 hover:bg-red-700 text-white p-1 rounded w-6 h-6 flex items-center justify-center"
-                  :disabled="selectedIds.length === 0" title="Eliminar seleccionados">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                    stroke-width="2" class="w-4 h-4">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M10 3h4a1 1 0 011 1v1H9V4a1 1 0 011-1z" />
-                  </svg>
-                </button>
               </th>
               <th class="py-2 px-4">Fecha de Creación</th>
               <th class="py-2 px-4">Nombre</th>
@@ -50,7 +50,7 @@
           </thead>
           <tbody>
             <tr v-for="customer in paginatedCustomers" :key="customer.id"
-              class="border-t border-gray-700 hover:bg-gray-700 transition">
+              class="border-b bg-gray-900 hover:bg-gray-700 transition">
               <td class="py-2 px-4">
                 <input type="checkbox" v-model="selectedIds" :value="customer.id" />
               </td>
@@ -77,33 +77,19 @@
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                     stroke="currentColor" class="w-5 h-5">
                     <path stroke-linecap="round" stroke-linejoin="round"
-                      d="M8 16H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2" />
+                      d="M8 16H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h6a2 2 0 1 1 2 2v2" />
                     <path stroke-linecap="round" stroke-linejoin="round" d="M8 8h8v8a2 2 0 0 1-2 2H8V8z" />
-                  </svg>
-                </button>
-
-                <!-- Eliminar fila -->
-                <button @click="deleteCustomer(customer.id)" 
-                  class="bg-red-600 hover:bg-red-700 text-white p-1 rounded w-6 h-6 flex items-center justify-center"
-                  title="Eliminar">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                    stroke-width="2" class="w-4 h-4">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M10 3h4a1 1 0 011 1v1H9V4a1 1 0 011-1z" />
                   </svg>
                 </button>
               </td>
             </tr>
           </tbody>
-
         </table>
       </div>
 
-      <!-- 📌 Footer de paginación -->
+      <!-- Paginación -->
       <div
         class="bg-gray-900 text-gray-300 p-4 rounded-b-lg shadow-inner flex flex-col sm:flex-row sm:justify-between items-center gap-4">
-
-        <!-- Filas por página -->
         <div class="flex items-center gap-2">
           <span>Filas por página:</span>
           <select v-model="rowsPerPage" class="bg-gray-800 text-white rounded px-2 py-1 focus:outline-none">
@@ -111,87 +97,94 @@
           </select>
         </div>
 
-        <!-- Paginación numérica -->
         <ul class="flex justify-center gap-1 text-gray-300">
-          <!-- Anterior -->
           <li>
             <button @click="previousPage" :disabled="currentPage === 1"
-              class="grid w-8 h-8 place-content-center rounded border border-gray-700 transition-colors hover:bg-gray-700 disabled:opacity-50"
-              aria-label="Previous page">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd"
-                  d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
-                  clip-rule="evenodd" />
-              </svg>
+              class="grid w-8 h-8 place-content-center rounded border border-gray-700 hover:bg-gray-700 disabled:opacity-50">
+              ◀
             </button>
           </li>
 
-          <!-- Números de página -->
           <li v-for="page in totalPages" :key="page">
             <button @click="currentPage = page" :class="[
               'w-8 h-8 text-sm font-medium rounded border flex items-center justify-center',
-              page === currentPage
-                ? 'bg-indigo-600 border-indigo-600 text-white'
-                : 'border-gray-700 hover:bg-gray-700'
+              page === currentPage ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-gray-700 hover:bg-gray-700'
             ]">
               {{ page }}
             </button>
           </li>
 
-          <!-- Siguiente -->
           <li>
             <button @click="nextPage" :disabled="currentPage === totalPages"
-              class="grid w-8 h-8 place-content-center rounded border border-gray-700 transition-colors hover:bg-gray-700 disabled:opacity-50"
-              aria-label="Next page">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd"
-                  d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                  clip-rule="evenodd" />
-              </svg>
+              class="grid w-8 h-8 place-content-center rounded border border-gray-700 hover:bg-gray-700 disabled:opacity-50">
+              ▶
             </button>
           </li>
         </ul>
       </div>
-
     </div>
   </div>
-  <!-- Modal -->
+
+  <!-- 🧩 Modal multi-paso -->
   <div v-if="showAddModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-    <div
-      class="bg-gray-800 text-white rounded-lg relative flex flex-col w-full sm:w-full max-w-xs sm:max-w-md md:max-w-lg h-full px-10 sm:h-5/6 py-4 sm:py-6">
+    <div class="bg-gray-800 text-white rounded-lg relative flex flex-col w-full max-w-lg h-auto p-6">
 
-      <!-- Botón cerrar -->
-      <button @click="showAddModal = false"
-        class="absolute top-2 right-2 text-gray-400 hover:text-white text-2xl">&times;</button>
+      <button v-if="step === 2" @click="step = 1" class="absolute top-4 left-4 p-2 rounded hover:bg-gray-700 transition"
+        title="Volver">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+          stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
 
-      <h2 class="text-xl sm:text-2xl font-bold mb-4 text-center">Agregar Empresa</h2>
-      <span class="flex items-center">
-        <span class="h-px flex-1 bg-gray-600"></span>
-      </span>
+      <h2 class="text-2xl font-bold mb-4 text-center">
+        {{ step === 1 ? 'Agregar Empresa' : 'Seleccionar Template' }}
+      </h2>
 
-      <!-- Formulario -->
-      <form @submit.prevent="addCompany" class="flex-1 flex flex-col gap-2 py-10 px-4  overflow-y-auto">
-        <!-- Texto instructivo -->
-        <p class="text-gray-300 mb-2">Ingrese el nombre de la empresa:</p>
+      <span class="h-px bg-gray-600 mb-4"></span>
 
-        <input v-model="newCompany.name" type="text" placeholder="Nombre"
+      <!-- Paso 1 -->
+      <form v-if="step === 1" @submit.prevent="goToNextStep" class="flex-1 flex flex-col gap-3 py-2 overflow-y-auto">
+        <input v-model="newCompany.name" type="text" placeholder="Nombre de la empresa"
           class="px-3 py-2 rounded bg-gray-700 text-white focus:outline-none w-full" required />
-        <p class="text-gray-300 mb-2">Ingrese el rut de la empresa:</p>
-        <input v-model="newCompany.rut" type="text" placeholder="12.630.254-K"
+        <input v-model="newCompany.rut" type="text" placeholder="RUT de la empresa"
           class="px-3 py-2 rounded bg-gray-700 text-white focus:outline-none w-full" required />
-        <p class="text-gray-300 mb-2">Ingrese contacto de la empresa:</p>
         <input v-model="newCompany.contact" type="text" placeholder="Contacto"
           class="px-3 py-2 rounded bg-gray-700 text-white focus:outline-none w-full" required />
-
-        <button type="submit"
-          class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded mt-auto w-full sm:w-auto self-center">Agregar</button>
       </form>
 
+      <!-- Paso 2 -->
+      <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-4 py-4">
+        <div v-for="template in templates" :key="template.id" @click="selectedTemplate = template.id" :class="[
+          'p-6 rounded-lg border cursor-pointer text-center transition',
+          selectedTemplate === template.id
+            ? 'border-blue-500 bg-blue-700'
+            : 'border-gray-600 hover:bg-gray-700'
+        ]">
+          <h3 class="text-lg font-semibold mb-2">{{ template.name }}</h3>
+          <p class="text-gray-300 text-sm">{{ template.description }}</p>
+        </div>
+      </div>
+
+      <!-- Botones -->
+      <div class="flex justify-between mt-6">
+        <button @click="cancel" class="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded w-[48%]">
+          Cancelar
+        </button>
+
+        <button v-if="step === 1" @click="goToNextStep" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded w-[48%]">
+          Siguiente
+        </button>
+
+        <button v-else @click="addCompany" :disabled="!selectedTemplate"
+          class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded w-[48%]">
+          Crear Empresa
+        </button>
+      </div>
     </div>
   </div>
-
-
 </template>
+
 
 <script setup>
 import { ref, computed, watch } from 'vue'
@@ -223,23 +216,47 @@ const rowsPerPage = ref(5)
 const currentPage = ref(1)
 
 const showAddModal = ref(false)
+const step = ref(1)
+const selectedTemplate = ref(null)
+
+
+const templates = ref([
+  { id: 1, name: 'Básico', description: 'Acceso limitado a reportes y panel general.' },
+  { id: 2, name: 'Profesional', description: 'Incluye reportes y comentarios.' },
+  { id: 3, name: 'Avanzado', description: 'Incluye dashboards personalizados y reportes completos.' },
+  { id: 4, name: 'Full', description: 'Todas las funciones habilitadas.' }
+])
+
 
 const newCompany = ref({
   name: '',
   rut: '',
   contact: ''
 })
+const goToNextStep = () => {
+  if (step.value === 1) {
+    step.value = 2
+  }
+}
+
+const cancel = () => {
+  showAddModal.value = false
+  step.value = 1
+  selectedTemplate.value = null
+  newCompany.value = { name: '', rut: '', contact: '' }
+}
+
 const addCompany = () => {
-  if (!newCompany.value.name || !newCompany.value.rut || !newCompany.value.contact) return
+  if (!selectedTemplate.value) return
   const id = customers.value.length + 1
   const createdAt = new Date().toISOString().slice(0, 10)
-  customers.value.push({ id, createdAt, ...newCompany.value })
-  newCompany.value = { name: '', rut: '', contact: '' }
-  showAddModal.value = false
-}
-const deleteCustomer = (id) => {
-  customers.value = customers.value.filter(c => c.id !== id)
-  selectedIds.value = selectedIds.value.filter(sel => sel !== id)
+  customers.value.push({
+    id,
+    createdAt,
+    ...newCompany.value,
+    templateId: selectedTemplate.value
+  })
+  cancel()
 }
 
 const deleteSelected = () => {
@@ -249,8 +266,13 @@ const deleteSelected = () => {
 
 const filteredCustomers = computed(() => {
   if (!searchTerm.value) return customers.value
+
+  const term = searchTerm.value.toLowerCase()
   return customers.value.filter((c) =>
-    c.name.toLowerCase().includes(searchTerm.value.toLowerCase())
+    c.name.toLowerCase().includes(term) ||
+    c.rut.toLowerCase().includes(term) ||
+    c.contact.toLowerCase().includes(term) ||
+    c.createdAt.toLowerCase().includes(term)
   )
 })
 const copiedId = ref(null)
@@ -298,5 +320,20 @@ watch(paginatedCustomers, () => {
 </script>
 
 <style scoped>
-/* Puedes personalizar estilos si quieres */
+.fade-scale-enter-active,
+.fade-scale-leave-active {
+  transition: all 0.3s ease;
+}
+
+.fade-scale-enter-from,
+.fade-scale-leave-to {
+  opacity: 0;
+  transform: scale(0.8);
+}
+
+.fade-scale-enter-to,
+.fade-scale-leave-from {
+  opacity: 1;
+  transform: scale(1);
+}
 </style>
