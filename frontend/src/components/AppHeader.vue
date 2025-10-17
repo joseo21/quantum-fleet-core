@@ -1,10 +1,10 @@
 <template>
-  <header class="bg-nav bg-[#1f2937] border-b border-gray-700 flex justify-between items-center px-3 py-2">
+  <header class=" bg-[#1f2937] border-b border-gray-700 flex justify-between items-center px-3 py-2">
     <!-- Logo -->
     <div class="flex items-center gap-2">
       <!-- Hamburger visible solo en sm -->
       <button 
-        class="md:hidden text-white text-2xl"
+        class="md:hidden text-white text-2xl px-6"
         @click="$emit('toggle-sidebar')"
       >
         ☰

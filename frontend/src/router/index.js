@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import AdminDashboard from '../Views/AdminDashboard.vue'
-import Empresas from '../Views/Empresas.vue'
+import Empresas from '../Views/EmpresasView.vue'
 
 const routes = [
   { path: '/', name: 'AdminDashboard', component: AdminDashboard },

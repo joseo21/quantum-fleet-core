@@ -49,11 +49,11 @@ export default {
       menuItems: [
         { text: "Dashboard", route: "/" },
         { text: "Dispositivos", route: "/dispositivos" },
+        { text: "Empresas", route: "/empresas" },
         { text: "Alertas", route: "/alertas" },
         { text: "Motor de Reglas", route: "/motor" },
         { text: "Fuentes de Datos", route: "/fuentes" },
         { text: "Usuarios", route: "/usuarios" },
-        { text: "Empresas", route: "/empresas" },
         { text: "Reportes/Informes", route: "/reportes" },
         { text: "Mantenciones", route: "/mantenciones" },
         { text: "Configuración", route: "/configuracion" }
