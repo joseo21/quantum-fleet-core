@@ -1,5 +1,6 @@
 <template>
-  <div class="flex items-center justify-center min-h-screen bg-gray-900 p-4">
+  <div class="flex items-center justify-center min-h-screen bg-gray-900 p-4  "
+    style="background-image: url('https://img.freepik.com/foto-gratuito/colorato-nebulosa-di-sfondo_1048-1944.jpg')">
     <div class="bg-gray-800 shadow-lg rounded-2xl p-8 w-full max-w-md flex flex-col items-center">
 
       <!-- Logo -->
@@ -22,17 +23,37 @@
 
 
         <!-- Contraseña -->
-        <div class="flex flex-col w-full">
+        <div class="flex flex-col w-full relative">
           <div class="flex justify-between items-center mb-2">
             <label class="text-sm text-gray-300">Contraseña</label>
             <a href="#" @click.prevent="showForgot = true" class="text-teal-600 hover:text-teal-500 text-sm">
               ¿Olvidaste tu contraseña?
             </a>
           </div>
-          <input v-model="password" type="password" placeholder="••••••••••••"
+
+          <input v-model="password" :type="showPassword ? 'text' : 'password'" placeholder="••••••••••••"
             class="w-full border border-gray-600 bg-gray-700 rounded-md px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:outline-none text-gray-100"
             required />
+
+          <!-- Botón para mostrar/ocultar contraseña -->
+          <button type="button" @click="showPassword = !showPassword"
+            class="absolute top-[38px] right-3 text-gray-400 hover:text-gray-200">
+            <svg v-if="showPassword" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor" stroke-width="2">
+              <!-- Ojo abierto -->
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
+            <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor" stroke-width="2">
+              <!-- Ojo cerrado -->
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M13.875 18.825A10.05 10.05 0 0112 19c-4.477 0-8.268-2.943-9.542-7a10.05 10.05 0 011.658-3.114M9.88 9.88a3 3 0 104.24 4.24M3 3l18 18" />
+            </svg>
+          </button>
         </div>
+
 
         <!-- Botón -->
         <button type="submit"
@@ -74,7 +95,7 @@
             </svg>
           </div>
 
-          <h2 class="text-center text-2xl font-semibold text-gray-100">Forgot Password?</h2>
+          <h2 class="text-center text-2xl font-semibold text-gray-100">No Recuerdas tu contraseña?</h2>
 
           <!-- Formulario / Mensaje de éxito -->
           <div class="space-y-4">
@@ -109,11 +130,11 @@
                 <div class="flex justify-center gap-4">
                   <button type="submit"
                     class="flex h-10 items-center justify-center rounded-lg bg-teal-600 text-white hover:bg-teal-500 px-6 py-2 transition">
-                    Send Reset
+                    Enviar Reset
                   </button>
                   <button @click="showForgot = false" type="button"
                     class="px-6 py-2 rounded border text-gray-100 hover:border-teal-500 hover:text-teal-500 transition">
-                    Cancel
+                    Cancelar
                   </button>
                 </div>
               </form>
@@ -145,7 +166,8 @@
                   stroke="currentColor" stroke-width="2">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
-                <p class="text-green-500 font-semibold text-center">Mensaje enviado correctamente al nuestro sistema de Tickets, favor de esperar su respuesta.</p>
+                <p class="text-green-500 font-semibold text-center">Mensaje enviado correctamente al nuestro sistema de
+                  Tickets, favor de esperar su respuesta.</p>
               </div>
             </template>
 
@@ -198,6 +220,8 @@ const mensaje = ref('')
 
 
 
+
+
 const handleForgot = () => {
   console.log('Recuperar contraseña:', emailForgot.value)
   // Aquí podrías llamar a tu API si hubiera
@@ -217,6 +241,7 @@ const handleContact = () => {
 
 const username = ref('')
 const password = ref('')
+const showPassword = ref(false)
 const error = ref('')
 const router = useRouter()
 
