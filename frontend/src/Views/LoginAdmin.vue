@@ -1,26 +1,32 @@
 <template>
-  <div class="flex items-center justify-center min-h-screen bg-gray-900 p-4  "
-    style="background-image: url('https://img.freepik.com/foto-gratuito/colorato-nebulosa-di-sfondo_1048-1944.jpg')">
+  <div
+    class="flex items-center justify-center min-h-screen bg-gray-900 p-4"
+    style="background-image: url('https://img.freepik.com/foto-gratuito/colorato-nebulosa-di-sfondo_1048-1944.jpg')"
+  >
     <div class="bg-gray-800 shadow-lg rounded-2xl p-8 w-full max-w-md flex flex-col items-center">
-
       <!-- Logo -->
-      <img src="https://www.gpsenchile.com/wp-content/uploads/2023/06/logowebblanco.png" alt="Logo"
-        class="w-32 sm:w-40 mb-6" />
+      <img
+        src="https://www.gpsenchile.com/wp-content/uploads/2023/06/logowebblanco.png"
+        alt="Logo"
+        class="w-32 sm:w-40 mb-6"
+      />
 
       <h2 class="text-3xl font-semibold text-center mb-8 text-gray-100">
         Bienvenido
       </h2>
 
       <form @submit.prevent="login" class="w-full space-y-6">
-
         <!-- Usuario -->
         <div>
           <label class="block text-sm text-gray-300 mb-2">Usuario</label>
-          <input v-model="username" type="text" placeholder="Usuario"
+          <input
+            v-model="username"
+            type="text"
+            placeholder="Usuario"
             class="w-full border border-gray-600 bg-gray-700 rounded-md px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:outline-none text-gray-100"
-            required />
+            required
+          />
         </div>
-
 
         <!-- Contraseña -->
         <div class="flex flex-col w-full relative">
@@ -31,33 +37,30 @@
             </a>
           </div>
 
-          <input v-model="password" :type="showPassword ? 'text' : 'password'" placeholder="••••••••••••"
-            class="w-full border border-gray-600 bg-gray-700 rounded-md px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:outline-none text-gray-100"
-            required />
-
-          <!-- Botón para mostrar/ocultar contraseña -->
-          <button type="button" @click="showPassword = !showPassword"
-            class="absolute top-[38px] right-3 text-gray-400 hover:text-gray-200">
-            <svg v-if="showPassword" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor" stroke-width="2">
-              <!-- Ojo abierto -->
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              <path stroke-linecap="round" stroke-linejoin="round"
-                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-            </svg>
-            <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor" stroke-width="2">
-              <!-- Ojo cerrado -->
-              <path stroke-linecap="round" stroke-linejoin="round"
-                d="M13.875 18.825A10.05 10.05 0 0112 19c-4.477 0-8.268-2.943-9.542-7a10.05 10.05 0 011.658-3.114M9.88 9.88a3 3 0 104.24 4.24M3 3l18 18" />
-            </svg>
-          </button>
+          <div class="relative">
+            <input
+              v-model="password"
+              :type="showPassword ? 'text' : 'password'"
+              placeholder="••••••••••••"
+              class="w-full border border-gray-600 bg-gray-700 rounded-md px-4 pr-10 py-3 focus:ring-2 focus:ring-teal-500 focus:outline-none text-gray-100"
+              required
+            />
+            <!-- Botón del ojo -->
+            <button
+              type="button"
+              @click="showPassword = !showPassword"
+              class="absolute inset-y-0 right-3 flex items-center text-gray-400"
+            >
+              <SvgIcon :name="showPassword ? 'eye' : 'eye-off'" />
+            </button>
+          </div>
         </div>
 
-
         <!-- Botón -->
-        <button type="submit"
-          class="w-full bg-teal-600 hover:bg-teal-500 text-white font-medium py-3 rounded-md transition-all text-lg">
+        <button
+          type="submit"
+          class="w-full bg-teal-600 hover:bg-teal-500 text-white font-medium py-3 rounded-md transition-all text-lg"
+        >
           Ingresar
         </button>
 
@@ -73,40 +76,38 @@
         </div>
       </form>
 
-      <!-- Modal Olvidé contraseña  -->
-      <div v-if="showForgot" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4"
-        @click.self="showForgot = false">
+      <!-- Modal Olvidé contraseña -->
+      <div
+        v-if="showForgot"
+        class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4"
+        @click.self="showForgot = false"
+      >
         <div class="w-full max-w-md rounded-lg bg-gray-800 dark:bg-gray-900 p-6 relative space-y-6">
-
           <!-- Botón cerrar -->
-          <button @click="showForgot = false"
-            class="absolute top-2 right-2 text-gray-300 hover:text-red-500 font-bold text-2xl">
+          <button
+            @click="showForgot = false"
+            class="absolute top-2 right-2 text-gray-300 hover:text-red-500 font-bold text-2xl"
+          >
             &times;
           </button>
 
           <!-- Icono superior -->
           <div class="flex justify-center mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-yellow-500" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round"
-                d="M12 11c.828 0 1.5.672 1.5 1.5V15a1.5 1.5 0 01-3 0v-2.5c0-.828.672-1.5 1.5-1.5z" />
-              <path stroke-linecap="round" stroke-linejoin="round" d="M6 11V8a6 6 0 1112 0v3" />
-              <rect x="6" y="11" width="12" height="10" rx="2" ry="2" />
-            </svg>
+            <SvgIcon name="lock" class="h-16 w-16 text-yellow-500" />
           </div>
 
-          <h2 class="text-center text-2xl font-semibold text-gray-100">No Recuerdas tu contraseña?</h2>
+          <h2 class="text-center text-2xl font-semibold text-gray-100">
+            ¿No recuerdas tu contraseña?
+          </h2>
 
           <!-- Formulario / Mensaje de éxito -->
           <div class="space-y-4">
             <template v-if="successForgot">
               <div class="flex flex-col items-center justify-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-green-500" fill="none" viewBox="0 0 24 24"
-                  stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
-                <p class="text-green-500 font-semibold text-center">Se ha enviado correctamente al sistema de Tickets,
-                  favor de esperar su respuesta.</p>
+                <SvgIcon name="check" class="h-12 w-12 text-green-500" />
+                <p class="text-green-500 font-semibold text-center">
+                  Se ha enviado correctamente al sistema de Tickets, favor de esperar su respuesta.
+                </p>
               </div>
             </template>
 
@@ -115,25 +116,31 @@
                 <!-- Email Input -->
                 <div class="relative">
                   <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-                      stroke="currentColor" stroke-width="2">
-                      <path stroke-linecap="round" stroke-linejoin="round"
-                        d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                    </svg>
+                    <SvgIcon name="mail" class="h-5 w-5" />
                   </span>
-                  <input id="email" type="email" v-model="emailForgot" placeholder="Enter your email"
+                  <input
+                    id="email"
+                    type="email"
+                    v-model="emailForgot"
+                    placeholder="Ingresa tu email"
                     class="w-full rounded-lg border border-gray-600 bg-gray-700 text-gray-100 px-4 py-2.5 pl-10 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                    required />
+                    required
+                  />
                 </div>
 
                 <!-- Botones centrados -->
                 <div class="flex justify-center gap-4">
-                  <button type="submit"
-                    class="flex h-10 items-center justify-center rounded-lg bg-teal-600 text-white hover:bg-teal-500 px-6 py-2 transition">
+                  <button
+                    type="submit"
+                    class="flex h-10 items-center justify-center rounded-lg bg-teal-600 text-white hover:bg-teal-500 px-6 py-2 transition"
+                  >
                     Enviar Reset
                   </button>
-                  <button @click="showForgot = false" type="button"
-                    class="px-6 py-2 rounded border text-gray-100 hover:border-teal-500 hover:text-teal-500 transition">
+                  <button
+                    @click="showForgot = false"
+                    type="button"
+                    class="px-6 py-2 rounded border text-gray-100 hover:border-teal-500 hover:text-teal-500 transition"
+                  >
                     Cancelar
                   </button>
                 </div>
@@ -143,48 +150,61 @@
         </div>
       </div>
 
-
-
       <!-- Modal Contáctanos -->
-      <div v-if="showContact" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
-        @click.self="showContact = false">
+      <div
+        v-if="showContact"
+        class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
+        @click.self="showContact = false"
+      >
         <div class="bg-gray-800 dark:bg-gray-900 p-6 rounded-lg shadow-lg w-full max-w-md relative space-y-6">
-
           <!-- Botón cerrar -->
-          <button @click="showContact = false"
-            class="absolute top-2 right-2 text-gray-300 hover:text-red-500 font-bold text-2xl">
+          <button
+            @click="showContact = false"
+            class="absolute top-2 right-2 text-gray-300 hover:text-red-500 font-bold text-2xl"
+          >
             &times;
           </button>
 
           <h2 class="text-2xl font-semibold mb-4 text-center text-gray-100">Contáctanos</h2>
 
-          <!-- Formulario / Mensaje de éxito -->
           <div class="space-y-4">
             <template v-if="successContact">
               <div class="flex flex-col items-center justify-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-green-500" fill="none" viewBox="0 0 24 24"
-                  stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
-                <p class="text-green-500 font-semibold text-center">Mensaje enviado correctamente al nuestro sistema de
-                  Tickets, favor de esperar su respuesta.</p>
+                <SvgIcon name="check" class="h-12 w-12 text-green-500" />
+                <p class="text-green-500 font-semibold text-center">
+                  Mensaje enviado correctamente al sistema de Tickets. Favor esperar respuesta.
+                </p>
               </div>
             </template>
 
             <template v-else>
               <form @submit.prevent="handleContact" class="space-y-4">
-                <input v-model="nombre" type="text" placeholder="Nombre"
+                <input
+                  v-model="nombre"
+                  type="text"
+                  placeholder="Nombre"
                   class="w-full border border-gray-600 bg-gray-700 text-gray-100 rounded px-2 py-1 focus:outline-none focus:border-teal-500"
-                  required />
-                <input v-model="email" type="email" placeholder="Email"
+                  required
+                />
+                <input
+                  v-model="email"
+                  type="email"
+                  placeholder="Email"
                   class="w-full border border-gray-600 bg-gray-700 text-gray-100 rounded px-2 py-1 focus:outline-none focus:border-teal-500"
-                  required />
-                <textarea v-model="mensaje" placeholder="Mensaje" rows="4"
+                  required
+                />
+                <textarea
+                  v-model="mensaje"
+                  placeholder="Mensaje"
+                  rows="4"
                   class="w-full border border-gray-600 bg-gray-700 text-gray-100 rounded px-2 py-1 focus:outline-none focus:border-teal-500"
-                  required></textarea>
+                  required
+                ></textarea>
 
-                <button type="submit"
-                  class="w-full bg-teal-600 hover:bg-teal-500 text-white font-bold py-2 rounded transition">
+                <button
+                  type="submit"
+                  class="w-full bg-teal-600 hover:bg-teal-500 text-white font-bold py-2 rounded transition"
+                >
                   Enviar
                 </button>
               </form>
@@ -192,9 +212,6 @@
           </div>
         </div>
       </div>
-
-
-
     </div>
   </div>
 </template>
@@ -203,67 +220,41 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import users from '@/data/users.json'
+import SvgIcon from '@/components/icons/SvgIcon.vue'
 
 const showForgot = ref(false)
 const showContact = ref(false)
-
 const successForgot = ref(false)
 const successContact = ref(false)
-
-// Campos Olvidé contraseña
 const emailForgot = ref('')
-
-// Campos Contáctanos
 const nombre = ref('')
 const email = ref('')
 const mensaje = ref('')
-
-
-
-
-
-const handleForgot = () => {
-  console.log('Recuperar contraseña:', emailForgot.value)
-  // Aquí podrías llamar a tu API si hubiera
-  successForgot.value = true
-  emailForgot.value = ''
-}
-
-const handleContact = () => {
-  console.log('Mensaje enviado:', { nombre: nombre.value, email: email.value, mensaje: mensaje.value })
-  successContact.value = true
-  nombre.value = ''
-  email.value = ''
-  mensaje.value = ''
-}
-
-
-
 const username = ref('')
 const password = ref('')
 const showPassword = ref(false)
 const error = ref('')
 const router = useRouter()
 
+const handleForgot = () => {
+  successForgot.value = true
+  emailForgot.value = ''
+}
+
+const handleContact = () => {
+  successContact.value = true
+  nombre.value = ''
+  email.value = ''
+  mensaje.value = ''
+}
+
 const login = () => {
-  console.log('Intentando login:', username.value)
-
   const userFound = users.find(u => u.username === username.value && u.password === password.value)
-  console.log('Usuario encontrado en JSON:', userFound)
-
   if (!userFound) {
     error.value = 'Usuario o contraseña incorrectos'
     return
   }
-
-  const storedUser = JSON.parse(localStorage.getItem('user') || '{}')
-  const profileImage = storedUser.username === userFound.username && storedUser.profileImage
-    ? storedUser.profileImage
-    : userFound.profileImage
-
-  const finalUser = { ...userFound, profileImage }
-  localStorage.setItem('user', JSON.stringify(finalUser))
-
+  localStorage.setItem('user', JSON.stringify(userFound))
   router.push('/AdminDashboard')
 }
 </script>

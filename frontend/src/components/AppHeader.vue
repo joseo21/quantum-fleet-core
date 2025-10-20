@@ -24,25 +24,23 @@
         <button @click="showDropdown = !showDropdown"
           class="flex flex-col items-start px-2 py-1 rounded hover:bg-[#2a3748] transition-colors">
           <div class="flex items-center gap-1">
-            <strong>{{ userName }}</strong>
+            <strong class="font-medium">{{ userName }}</strong>
             <span class="transition-transform duration-200 text-[10px]" :class="{ 'rotate-180': showDropdown }">▼</span>
           </div>
-          <span>{{ userRole }}</span>
+          <span class="text-gray-400 text-xs">{{ userRole }}</span>
         </button>
 
         <!-- Dropdown -->
         <div v-if="showDropdown" class="absolute right-0 mt-1 w-40 bg-[#1f2937] text-white rounded-lg shadow-lg z-50">
           <ul class="list-none p-2">
-            <li><hr class="border-t my-1 border-gray-600" /></li>
+            <li>
+              <hr class="border-t my-1 border-gray-600" />
+            </li>
             <li>
               <a @click.prevent="logout"
                 class="w-full group relative inline-flex items-center overflow-hidden gap-x-3.5 py-2 px-2.5 rounded-lg text-sm hover:bg-[#ff6600] cursor-pointer">
                 <span class="absolute -start-full transition-all group-hover:start-2">
-                  <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                  </svg>
+                  <SvgIcon name="logout" class="w-4 h-4" />
                 </span>
                 <span class="transition-all group-hover:ms-4">Cerrar sesión</span>
               </a>
@@ -57,6 +55,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import SvgIcon from '@/components/icons/SvgIcon.vue'
 
 const router = useRouter()
 const user = ref({})
@@ -104,4 +103,3 @@ const logout = () => {
   router.push('/')
 }
 </script>
-
