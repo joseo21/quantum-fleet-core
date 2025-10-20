@@ -239,7 +239,7 @@ const customers = ref([
 // 🔍 Búsqueda
 const searchTerm = ref('')
 const selectedIds = ref([])   
-const selectAll = ref(false)  
+const selectAll = ref(false)    
 
 // 📄 Paginación
 const rowsPerPageOptions = [5, 10, 20, 50]

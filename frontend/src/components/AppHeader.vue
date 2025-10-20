@@ -1,17 +1,9 @@
 <template>
-  <header class=" bg-[#1f2937] border-b border-gray-700 flex justify-between items-center px-3 py-2">
+  <header class="bg-[#1f2937] border-b border-gray-700 flex justify-between items-center px-3 py-2">
     <!-- Logo -->
     <div class="flex items-center gap-2">
-      <!-- Hamburger visible solo en sm -->
-      <button 
-        class="md:hidden text-white text-2xl px-6"
-        @click="$emit('toggle-sidebar')"
-      >
-        ☰
-      </button>
-
-      <img alt="Logo" src="https://www.gpsenchile.com/wp-content/uploads/2023/06/logowebblanco.png"
-        class="w-36 h-15" />
+      <button class="md:hidden text-white text-2xl px-6" @click="$emit('toggle-sidebar')">☰</button>
+      <img alt="Logo" src="https://www.gpsenchile.com/wp-content/uploads/2023/06/logowebblanco.png" class="w-36 h-15" />
     </div>
 
     <!-- Perfil -->
@@ -32,21 +24,16 @@
         <button @click="showDropdown = !showDropdown"
           class="flex flex-col items-start px-2 py-1 rounded hover:bg-[#2a3748] transition-colors">
           <div class="flex items-center gap-1">
-            <strong class="font-medium">Sebastián Suazo</strong>
-            <span class="transition-transform duration-200 text-[10px]"
-              :class="{ 'rotate-180': showDropdown }">▼</span>
+            <strong>{{ userName }}</strong>
+            <span class="transition-transform duration-200 text-[10px]" :class="{ 'rotate-180': showDropdown }">▼</span>
           </div>
-          <span class="text-gray-400 text-xs">Administrador</span>
+          <span>{{ userRole }}</span>
         </button>
 
         <!-- Dropdown -->
-        <div v-if="showDropdown" class="absolute right-0 mt-1 w-40 bg-[#1f2937] text-white rounded shadow-lg z-50">
+        <div v-if="showDropdown" class="absolute right-0 mt-1 w-40 bg-[#1f2937] text-white rounded-lg shadow-lg z-50">
           <ul class="list-none p-2">
-            <li class="px-2 py-1 hover:bg-[#ff6600] cursor-pointer">My account</li>
-            <li class="px-2 py-1 hover:bg-[#ff6600] cursor-pointer">Notifications</li>
-            <li>
-              <hr class="border-t my-1 border-gray-600" />
-            </li>
+            <li><hr class="border-t my-1 border-gray-600" /></li>
             <li>
               <a @click.prevent="logout"
                 class="w-full group relative inline-flex items-center overflow-hidden gap-x-3.5 py-2 px-2.5 rounded-lg text-sm hover:bg-[#ff6600] cursor-pointer">
@@ -62,32 +49,59 @@
             </li>
           </ul>
         </div>
-
       </div>
     </div>
   </header>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 
-const profileImage = ref(localStorage.getItem("profileImage") || "https://img.freepik.com/vector-premium/perfil-hombre_1083548-15963.jpg")
+const router = useRouter()
+const user = ref({})
+const profileImage = ref('')
 const fileInput = ref(null)
 const showDropdown = ref(false)
 
+onMounted(() => {
+  const storedUser = localStorage.getItem('user')
+  console.log('AppHeader - usuario cargado de localStorage:', storedUser)
+  user.value = storedUser ? JSON.parse(storedUser) : {}
+  profileImage.value = user.value.profileImage || 'https://img.freepik.com/vector-premium/perfil-hombre_1083548-15963.jpg'
+  console.log('AppHeader - profileImage inicial:', profileImage.value)
+})
+
+const userName = computed(() => user.value.name || 'Invitado')
+const userRole = computed(() => user.value.role || 'Invitado')
+
 const selectFile = () => fileInput.value.click()
+
 const previewImage = (event) => {
   const file = event.target.files[0]
   if (!file) return
+
   const reader = new FileReader()
   reader.onload = () => {
-    profileImage.value = reader.result
-    localStorage.setItem("profileImage", reader.result)
+    const dataUrl = reader.result
+    console.log('Imagen seleccionada:', dataUrl.length, 'bytes')
+
+    profileImage.value = dataUrl
+    const updatedUser = { ...user.value, profileImage: dataUrl }
+    user.value = updatedUser
+
+    localStorage.setItem('user', JSON.stringify(updatedUser))
+    console.log('Imagen guardada en localStorage:', JSON.parse(localStorage.getItem('user')).profileImage.length, 'bytes')
   }
   reader.readAsDataURL(file)
 }
 
 const logout = () => {
-  console.log("Cerrar sesión")
+  localStorage.removeItem('user')
+  user.value = {}
+  profileImage.value = 'https://img.freepik.com/vector-premium/perfil-hombre_1083548-15963.jpg'
+  console.log('Logout - usuario eliminado')
+  router.push('/')
 }
 </script>
+
