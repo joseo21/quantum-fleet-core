@@ -95,6 +95,35 @@
         stroke="currentColor" stroke-width="2">
         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
     </svg>
+    <!-- Plus / Agregar -->
+    <svg v-else-if="name === 'plus'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+        stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+    </svg>
+    <!-- Search / Lupa -->
+    <svg v-else-if="name === 'search'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+        stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round"
+            d="M21 21l-4.35-4.35m1.85-5.4a7.25 7.25 0 11-14.5 0 7.25 7.25 0 0114.5 0z" />
+    </svg>
+    <!-- OK -->
+    <svg v-else-if="name === 'ok'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+        stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round"
+            d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+    <!-- Proxima Mantencion -->
+    <svg v-else-if="name === 'vencida'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+        stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round"
+            d="M12 9v4m0 4h.01M12 2.25a9.75 9.75 0 100 19.5 9.75 9.75 0 000-19.5z" />
+    </svg>
+    <!-- Mantencion Vencida -->
+    <svg v-else-if="name === 'proxima'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+        stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round"
+            d="M12 9v3.75m0 3.75h.01M3.6 18h16.8c1.2 0 2-1.3 1.4-2.4L13.4 3.4a1.5 1.5 0 00-2.8 0L2.2 15.6C1.6 16.7 2.4 18 3.6 18z" />
+    </svg>
 
 
 </template>

@@ -47,7 +47,7 @@
           </thead>
           <tbody>
             <tr v-for="customer in paginatedCustomers" :key="customer.id"
-              class="border-t border-gray-700 bg-gray-900 hover:bg-gray-700 transition">
+              class="border-t border-gray-700 bg-gray-20 hover:bg-gray-700 transition">
               <td class="py-2 px-4">
                 <input type="checkbox" v-model="selectedIds" :value="customer.id" />
               </td>

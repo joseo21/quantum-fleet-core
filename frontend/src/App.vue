@@ -7,7 +7,7 @@
       <div class="flex flex-1">
         <AppSidebar v-model:isOpen="showSidebar" />
 
-        <main class="flex-1 p-4 overflow-auto bg-gray-900">
+        <main class="flex-1 p-4 overflow-auto bg-[#f3f3f3]">
           <router-view />
         </main>
       </div>
