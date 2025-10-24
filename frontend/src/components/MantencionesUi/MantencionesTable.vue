@@ -16,7 +16,9 @@
           </button>
         </div>
       </div>
-
+      <div class="ml-4 flex items-center text-sm text-gray-600 dark:text-gray-300">
+        Total de registros: {{ mantenciones.length }}
+      </div>
       <!-- 🟢 Pequeños KPIs -->
       <div class="flex gap-2">
         <div class="mini-kpi kpi-green">
