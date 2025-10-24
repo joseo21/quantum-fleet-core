@@ -9,8 +9,10 @@
 
 
     <ModalVerMantenciones v-if="showVerModal" :patente="patenteSeleccionada"
-      :mantenciones="mantencionesPorPatente[patenteSeleccionada] || []" :horometros-actuales="horometrosActuales"
+      :mantenciones="mantencionesPorPatente[patenteSeleccionada] || []"
+      :odometro-actual="selectedVehiculo?.odometro || 0" :horometros-actuales="horometrosActuales"
       @close="showVerModal = false" @editar="editarMantencion" @eliminar="eliminarMantencion" />
+
 
   </div>
 </template>

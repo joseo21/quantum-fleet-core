@@ -105,7 +105,8 @@ export default {
     props: {
         patente: { type: String, required: true },
         mantenciones: { type: Array, required: true },
-        horometrosActuales: { type: Object, default: () => ({}) }
+        horometrosActuales: { type: Object, default: () => ({}) },
+        odometroActual: { type: Number, default: 0 } 
     },
     methods: {
         formatFecha(fechaStr) {
@@ -128,9 +129,7 @@ export default {
 
                 // Odómetro
                 if (tipo === 'Por Odómetro') {
-                    // Obtener odómetro actual real del vehículo
-                    const vehiculo = this.$parent.mantenciones.find(v => v.patente === this.patente)
-                    actual = vehiculo ? Number(vehiculo.odometro) : Number(m.actual || 0)
+                    actual = Number(this.odometroActual || m.actual || 0)
 
                     const ultimo = Number(m.ultimo || 0)
                     const siguiente = ultimo + intervalo
@@ -141,6 +140,7 @@ export default {
                     else if (faltante <= alerta) estado = 'Próxima mantención'
                     else estado = 'OK'
                 }
+
 
                 // Horómetro
                 else if (tipo === 'Por Horómetro') {
