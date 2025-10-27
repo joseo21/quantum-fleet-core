@@ -1,10 +1,9 @@
 <template>
-  <div class="p-2 sm:p-2 w-full flex flex-col">
-    <!-- 🔍 Barra de búsqueda + KPIs -->
-    <div class="flex flex-col sm:flex-row justify-between items-center mb-4 gap-3">
-      <!-- 🟠 Barra de búsqueda -->
-      <div class="flex w-full sm:w-2/3 md:w-1/2">
-        <div class="flex w-full border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
+  <div class="p-2 sm:p-4 w-full flex flex-col">
+    <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-4 gap-4">
+      
+      <div class="flex w-full xl:w-1/2 flex-col sm:flex-row gap-3 sm:gap-4 items-start sm:items-center">
+        <div class="flex flex-1 w-full sm:w-auto border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
           <div class="flex items-center justify-center px-3 bg-gray-100 dark:bg-gray-800 text-gray-500">
             <SvgIcon name="search" class="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
@@ -15,108 +14,103 @@
             Limpiar
           </button>
         </div>
+
+        <div class="flex items-center text-sm text-gray-600 dark:text-gray-300 flex-shrink-0">
+          Total de registros: {{ mantenciones.length }}
+        </div>
       </div>
-      <div class="ml-4 flex items-center text-sm text-gray-600 dark:text-gray-300">
-        Total de registros: {{ mantenciones.length }}
-      </div>
-      <!-- 🟢 Pequeños KPIs -->
-      <div class="flex gap-2">
+      
+      <div class="flex gap-3 flex-wrap justify-center sm:justify-start xl:justify-end w-full xl:w-auto">
+        
         <div class="mini-kpi kpi-green">
-          <span class="text-xs font-medium">Mantención al Día</span>
-          <span class="font-bold text-sm">{{ totalVerde }}</span>
+          <div class="flex items-center gap-2">
+            <SvgIcon name="ok" class="w-5 h-5" />
+            <span class="text-xs font-medium uppercase">Al Día</span>
+          </div>
+          <span class="text-2xl font-extrabold mt-1">{{ totalVerde }}</span>
         </div>
 
         <div class="mini-kpi kpi-yellow">
-          <span class="text-xs font-medium">Proximo a Mantención</span>
-          <span class="font-bold text-sm">{{ totalAmarillo }}</span>
+          <div class="flex items-center gap-2">
+            <SvgIcon name="proxima" class="w-5 h-5" />
+            <span class="text-xs font-medium uppercase">Próximas</span>
+          </div>
+          <span class="text-2xl font-extrabold mt-1">{{ totalAmarillo }}</span>
         </div>
 
         <div class="mini-kpi kpi-red">
-          <span class="text-xs font-medium">Mantención Vencida</span>
-          <span class="font-bold text-sm">{{ totalRojo }}</span>
+          <div class="flex items-center gap-2">
+            <SvgIcon name="vencida" class="w-5 h-5" />
+            <span class="text-xs font-medium uppercase">Vencidas</span>
+          </div>
+          <span class="text-2xl font-extrabold mt-1">{{ totalRojo }}</span>
         </div>
       </div>
     </div>
+    
+    <div class="space-y-4 max-h-[500px] overflow-y-auto">
+      <div v-for="(item, idx) in paginatedData" :key="idx"
+        class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-md p-4 transition duration-200 hover:shadow-lg">
 
-    <!-- 📋 Tabla con scroll -->
-    <div class="border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm overflow-y-auto max-h-[500px]">
-      <table class="min-w-full text-xs sm:text-sm md:text-base text-center border-collapse">
-        <thead class="bg-[#102372] dark:bg-[#102372] sticky top-0 z-10 text-gray-100">
-          <tr>
-            <th v-for="col in columns" :key="col"
-              class="font-semibold py-2 px-3 border-b border-gray-300 dark:border-gray-600">
-              {{ col }}
-            </th>
-          </tr>
-        </thead>
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
 
-        <tbody>
-          <tr v-for="(item, idx) in paginatedData" :key="idx"
-            class="hover:bg-gray-50 dark:hover:bg-gray-700 border-b dark:border-gray-600">
-            <td class="py-2 px-3">{{ item.patente }}</td>
-            <td class="py-2 px-3">{{ formatOdometro(item.odometro) }}</td>
-            <td class="py-2 px-3 text-center">
-              <div class="flex flex-col items-center justify-center gap-2">
-                <!-- Imagen -->
-                <img v-if="item.estado === 'OK'" src="https://sinergygroup.cl/Mantenciones/img/verde.png" alt="OK"
-                  class="w-24 sm:w-28 md:w-32 h-auto object-contain" />
-                <img v-else-if="item.estado === 'Próxima mantención'"
-                  src="https://sinergygroup.cl/Mantenciones/img/amarillo.png" alt="Próxima mantención"
-                  class="w-24 sm:w-28 md:w-32 h-auto object-contain" />
-                <img v-else-if="item.estado === 'Requiere mantención'"
-                  src="https://sinergygroup.cl/Mantenciones/img/rojo.png" alt="Mantención vencida"
-                  class="w-24 sm:w-28 md:w-32 h-auto object-contain" />
+          <div class="flex-1 min-w-[150px]">
+            <p class="text-lg font-bold text-[#102372] dark:text-[#ff6600]">{{ item.patente }}</p>
+            <div class="text-sm text-gray-700 dark:text-gray-300 mb-2">
+              <span class="text-xs text-gray-500 dark:text-gray-400 mr-1">Odómetro:</span>
+              <span class="font-semibold">{{ formatOdometro(item.odometro) }} Km</span>
+            </div>
+            <div class="mt-2"> 
+              <span v-if="item.estado === 'OK'"
+                class="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1 text-emerald-700 text-xs font-medium shadow-sm">
+                <SvgIcon name="ok" class="w-3 h-3" />
+                <span>Vehículo al día</span>
+              </span>
 
-                <!-- Etiquetas tipo badge -->
-                <span v-if="item.estado === 'OK'"
-                  class="inline-flex items-center gap-1 sm:gap-2 justify-center rounded-full bg-emerald-100 px-3 py-1 text-emerald-700 text-xs sm:text-sm font-medium">
-                  <SvgIcon name="ok" class="w-4 h-4 sm:w-5 sm:h-5" />
-                  <span>Vehículo al día</span>
-                </span>
+              <span v-else-if="item.estado === 'Próxima mantención'"
+                class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-3 py-1 text-amber-700 text-xs font-medium shadow-sm">
+                <SvgIcon name="proxima" class="w-3 h-3" />
+                <span>Próximo a Mantención</span>
+              </span>
 
-                <span v-else-if="item.estado === 'Próxima mantención'"
-                  class="inline-flex items-center gap-1 sm:gap-2 justify-center rounded-full bg-amber-100 px-3 py-1 text-amber-700 text-xs sm:text-sm font-medium">
-                  <SvgIcon name="proxima" class="w-4 h-4 sm:w-5 sm:h-5" />
-                  <span>Proximo a Mantención</span>
-                </span>
+              <span v-else-if="item.estado === 'Requiere mantención'"
+                class="inline-flex items-center gap-1 rounded-full bg-red-100 px-3 py-1 text-red-700 text-xs font-medium shadow-sm">
+                <SvgIcon name="vencida" class="w-3 h-3" />
+                <span>Mantención vencida</span>
+              </span>
+            </div>
+          </div>
+          
+          <div class="flex flex-col items-center justify-center flex-shrink-0 w-full md:w-auto mt-4 md:mt-0">
+            <img v-if="item.estado === 'OK'" src="https://sinergygroup.cl/Mantenciones/img/verde.png" alt="OK"
+              class="w-16 h-auto object-contain" />
+            <img v-else-if="item.estado === 'Próxima mantención'" src="https://sinergygroup.cl/Mantenciones/img/amarillo.png"
+              alt="Próxima mantención" class="w-16 h-auto object-contain" />
+            <img v-else-if="item.estado === 'Requiere mantención'" src="https://sinergygroup.cl/Mantenciones/img/rojo.png"
+              alt="Mantención vencida" class="w-16 h-auto object-contain" />
+            <span v-else class="text-gray-500 text-xs mt-2">{{ item.estado }}</span>
+          </div>
 
-                <span v-else-if="item.estado === 'Requiere mantención'"
-                  class="inline-flex items-center gap-1 sm:gap-2 justify-center rounded-full bg-red-100 px-3 py-1 text-red-700 text-xs sm:text-sm font-medium">
-                  <SvgIcon name="vencida" class="w-4 h-4 sm:w-5 sm:h-5" />
-                  <span>Mantención vencida</span>
-                </span>
+          <div class="flex gap-3 pt-2 w-full md:w-auto md:flex-col justify-end flex-shrink-0">
+            <button @click="$emit('ver-mantenciones', item)"
+              class="flex-1 flex items-center justify-center gap-1 px-3 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium transition">
+              <SvgIcon name="eye" class="w-4 h-4" /> <span class="md:hidden lg:inline">Ver Historial</span>
+            </button>
 
-                <span v-else class="text-gray-500 text-xs">{{ item.estado }}</span>
-              </div>
-            </td>
+            <button @click="$emit('agregar-mantencion', item)"
+              class="flex-1 flex items-center justify-center gap-1 px-3 py-2 rounded bg-[#ff6600] hover:bg-[#e65500] text-white text-xs font-medium transition">
+              <SvgIcon name="plus" class="w-4 h-4" /> <span class="md:hidden lg:inline">Agregar Mantencion</span>
+            </button>
+          </div>
+        </div>
+      </div>
 
-            <td class="py-2 px-3">
-              <button @click="$emit('ver-mantenciones', item)"
-                class="flex items-center justify-center gap-1 sm:gap-2 mx-auto px-2 sm:px-6 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-medium transition">
-                <SvgIcon name="eye" class="w-4 h-4 sm:w-5 sm:h-5" />
-                <span class="hidden sm:inline">Ver</span>
-              </button>
-            </td>
-            <td class="py-2 px-3">
-              <button @click="$emit('agregar-mantencion', item)"
-                class="flex items-center justify-center gap-1 sm:gap-2 mx-auto px-2 sm:px-6 py-2 rounded bg-[#ff6600] hover:bg-[#e65500] text-white text-xs sm:text-sm font-medium transition">
-                <SvgIcon name="plus" class="w-4 h-4 sm:w-5 sm:h-5" />
-                <span class="hidden sm:inline">Agregar</span>
-              </button>
-
-            </td>
-          </tr>
-
-          <tr v-if="filteredData.length === 0">
-            <td colspan="5" class="text-center py-4 text-gray-500 dark:text-gray-400">
-              No hay registros de mantenciones
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <div v-if="filteredData.length === 0" class="text-center py-4 text-gray-500 dark:text-gray-400">
+        No hay registros de mantenciones
+      </div>
     </div>
 
-    <!-- 📑 Controles de paginación -->
+
     <div
       class="flex flex-col sm:flex-row justify-between items-center mt-4 text-xs sm:text-sm text-gray-700 dark:text-gray-300 gap-2 bg-[#f3f3f3] dark:bg-gray-800 p-2 rounded-md shadow-sm">
       <div class="flex items-center gap-2">
@@ -144,11 +138,14 @@
   </div>
 </template>
 
+### Script (Logic)
+
+```javascript
 <script>
 import SvgIcon from '@/components/icons/SvgIcon.vue'
 
 export default {
-  name: "MantencionesTable",
+  name: "MantencionesCards",
   components: { SvgIcon },
   props: { mantenciones: { type: Array, default: () => [] } },
   data() {
@@ -157,13 +154,6 @@ export default {
       debouncedSearch: "",
       currentPage: 1,
       rowsPerPage: 5,
-      columns: [
-        "Patente",
-        "Odómetro (Km)",
-        "Estado de mantención",
-        "Ver Mantenciones",
-        "Agregar Mantención",
-      ],
     };
   },
   computed: {
@@ -198,6 +188,11 @@ export default {
         this.currentPage = 1;
       }, 300);
     },
+    filteredData() {
+      if (this.currentPage > this.totalPages) {
+        this.currentPage = 1;
+      }
+    }
   },
   methods: {
     goToPage(page) {
@@ -205,7 +200,7 @@ export default {
     },
     formatOdometro(valor) {
       const num = parseFloat(valor);
-      return isNaN(num) ? '0.00' : num.toFixed(2);
+      return isNaN(num) ? '0.00' : num.toLocaleString('es-CL', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     },
     clearSearch() {
       this.search = "";
@@ -215,21 +210,30 @@ export default {
 };
 </script>
 
+### Style (CSS)
+
+```css
 <style scoped>
 .mini-kpi {
-  @apply flex flex-col items-center justify-center rounded-md px-9 py-5 border text-center shadow-sm;
-  min-width: 60px;
+  /* Estilo Sutil: Eliminamos sombra y borde. Usamos un padding más pequeño. */
+  @apply flex flex-col items-center justify-center 
+         rounded-lg px-4 py-2 
+         text-center 
+         transition duration-200; /* Transición suave sin el hover:shadow-xl */
+  min-width: 90px; 
 }
 
+/* Colores de Fondo y Texto Sutiles, basados en la paleta de alertas */
 .kpi-green {
-  @apply bg-green-50 border-green-200 text-green-700;
+  /* Fondo muy claro, borde suave (opcional), texto del color primario */
+  @apply bg-emerald-50 dark:bg-gray-700 border border-emerald-200 dark:border-emerald-600 text-emerald-700 dark:text-emerald-400;
 }
 
 .kpi-yellow {
-  @apply bg-yellow-50 border-yellow-200 text-yellow-700;
+  @apply bg-amber-50 dark:bg-gray-700 border border-amber-200 dark:border-amber-600 text-amber-700 dark:text-amber-400;
 }
 
 .kpi-red {
-  @apply bg-red-50 border-red-200 text-red-700;
+  @apply bg-red-50 dark:bg-gray-700 border border-red-200 dark:border-red-600 text-red-700 dark:text-red-400;
 }
 </style>

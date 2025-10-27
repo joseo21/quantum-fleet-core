@@ -26,7 +26,6 @@
 
 
         <!-- Templates visibles -->
-        <!-- Templates visibles -->
         <div class="flex justify-center gap-4 flex-wrap w-full">
           <div v-for="template in paginatedTemplates" :key="template.id" @click="selectTemplate(template)" :class="[
             'relative group p-4 sm:p-6 w-full sm:w-48 md:w-56 rounded-lg border cursor-pointer text-center transition-all',
@@ -110,8 +109,9 @@
         <div>
           <label class="block text-sm mb-1">Email de contacto</label>
           <input type="email" placeholder="Ej: contacto@empresa.cl"
-            class="w-full p-2 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 required"
-            v-model="maintenance.email" />
+            class="w-full p-2 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600"
+            v-model="maintenance.email" required />
+
         </div>
 
         <div>
@@ -280,63 +280,77 @@ export default {
     },
 
     // Guardar mantención nueva o editada
-    saveMaintenance() {
-      if (!this.maintenance) return
+saveMaintenance() {
+  if (!this.maintenance) return
 
-      const tipo = this.maintenance.type || this.selectedTemplate?.type || ''
+  // === 🔎 Validaciones previas ===
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  const errores = []
 
-      const nuevaMantencion = {
-        nombre: this.maintenance.name || this.selectedTemplate?.name || '',
-        tipo,
-        intervalo: Number(this.maintenance.intervalo || 0),
-        alerta: Number(this.maintenance.alerta || 0),
-        email: this.maintenance.email || '',
-        fechaCreacion: new Date().toISOString(),
-      }
+  if (!this.maintenance.name?.trim()) errores.push("El nombre de la mantención es obligatorio.")
+  if (!this.maintenance.type?.trim() && !this.selectedTemplate?.type) errores.push("Debes seleccionar un tipo de mantención.")
+  if (!this.maintenance.intervalo || isNaN(this.maintenance.intervalo)) errores.push("El intervalo debe ser un número válido.")
+  if (!this.maintenance.alerta || isNaN(this.maintenance.alerta)) errores.push("El valor de alerta debe ser un número válido.")
+  if (!emailRegex.test(this.maintenance.email || '')) errores.push("El correo electrónico no es válido.")
 
-      if (tipo === 'Por Odómetro' || tipo === 'Por Horómetro') {
-        // Usamos la misma lógica para Odómetro y Horómetro
-        nuevaMantencion.ultimo = Number(this.maintenance.km || 0)
-        nuevaMantencion.actual = Number(this.kmActual || 0)
+  // Si hay errores, mostramos una alerta y detenemos la ejecución
+  if (errores.length > 0) {
+    alert(errores.join('\n'))
+    return
+  }
 
-        const diferencia = nuevaMantencion.actual - nuevaMantencion.ultimo
-        if (diferencia < nuevaMantencion.intervalo - nuevaMantencion.alerta) {
-          nuevaMantencion.estado = 'OK'
-        } else if (diferencia >= nuevaMantencion.intervalo - nuevaMantencion.alerta && diferencia < nuevaMantencion.intervalo) {
-          nuevaMantencion.estado = 'Próxima mantención'
-        } else {
-          nuevaMantencion.estado = 'Requiere mantención'
-        }
-      } else if (tipo === 'Por Tiempo') {
-        // Lógica existente para Por Tiempo
-        nuevaMantencion.ultimo = this.maintenance.fechaUltima || new Date().toISOString().split('T')[0]
-        nuevaMantencion.actual = new Date().toISOString().split('T')[0]
+  // === 🧩 Construcción del objeto mantención ===
+  const tipo = this.maintenance.type || this.selectedTemplate?.type || ''
 
-        const ultima = new Date(nuevaMantencion.ultimo)
-        const hoy = new Date()
-        const diffDias = Math.floor((hoy - ultima) / (1000 * 60 * 60 * 24))
+  const nuevaMantencion = {
+    nombre: this.maintenance.name || this.selectedTemplate?.name || '',
+    tipo,
+    intervalo: Number(this.maintenance.intervalo || 0),
+    alerta: Number(this.maintenance.alerta || 0),
+    email: this.maintenance.email || '',
+    fechaCreacion: new Date().toISOString(),
+  }
 
-        if (diffDias < nuevaMantencion.intervalo - nuevaMantencion.alerta) {
-          nuevaMantencion.estado = 'OK'
-        } else if (diffDias >= nuevaMantencion.intervalo - nuevaMantencion.alerta && diffDias < nuevaMantencion.intervalo) {
-          nuevaMantencion.estado = 'Próxima mantención'
-        } else {
-          nuevaMantencion.estado = 'Requiere mantención'
-        }
-      }
+  if (tipo === 'Por Odómetro' || tipo === 'Por Horómetro') {
+    nuevaMantencion.ultimo = Number(this.maintenance.km || 0)
+    nuevaMantencion.actual = Number(this.kmActual || 0)
 
-      // Emitir evento al componente padre
-      this.$emit('save', nuevaMantencion)
-
-      // Marcar plantilla como utilizada
-      if (this.selectedTemplate) {
-        const index = this.templates.findIndex(t => t.id === this.selectedTemplate.id)
-        if (index !== -1) this.templates[index].used = true
-      }
-
-      this.cancel()
+    const diferencia = nuevaMantencion.actual - nuevaMantencion.ultimo
+    if (diferencia < nuevaMantencion.intervalo - nuevaMantencion.alerta) {
+      nuevaMantencion.estado = 'OK'
+    } else if (diferencia >= nuevaMantencion.intervalo - nuevaMantencion.alerta && diferencia < nuevaMantencion.intervalo) {
+      nuevaMantencion.estado = 'Próxima mantención'
+    } else {
+      nuevaMantencion.estado = 'Requiere mantención'
     }
-    ,
+  } else if (tipo === 'Por Tiempo') {
+    nuevaMantencion.ultimo = this.maintenance.fechaUltima || new Date().toISOString().split('T')[0]
+    nuevaMantencion.actual = new Date().toISOString().split('T')[0]
+
+    const ultima = new Date(nuevaMantencion.ultimo)
+    const hoy = new Date()
+    const diffDias = Math.floor((hoy - ultima) / (1000 * 60 * 60 * 24))
+
+    if (diffDias < nuevaMantencion.intervalo - nuevaMantencion.alerta) {
+      nuevaMantencion.estado = 'OK'
+    } else if (diffDias >= nuevaMantencion.intervalo - nuevaMantencion.alerta && diffDias < nuevaMantencion.intervalo) {
+      nuevaMantencion.estado = 'Próxima mantención'
+    } else {
+      nuevaMantencion.estado = 'Requiere mantención'
+    }
+  }
+
+  // === 🚀 Emitir y cerrar modal ===
+  this.$emit('save', nuevaMantencion)
+
+  if (this.selectedTemplate) {
+    const index = this.templates.findIndex(t => t.id === this.selectedTemplate.id)
+    if (index !== -1) this.templates[index].used = true
+  }
+
+  this.cancel()
+},
+
 
     // Permitir solo números en inputs específicos
     onlyNumber(e) {

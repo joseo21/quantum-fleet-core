@@ -1,14 +1,11 @@
 <template>
   <header class="bg-[#1f2937] border-b border-gray-700 flex justify-between items-center px-3 py-2">
-    <!-- Logo -->
     <div class="flex items-center gap-2">
       <button class="md:hidden text-white text-2xl px-6" @click="$emit('toggle-sidebar')">☰</button>
       <img alt="Logo" src="https://www.gpsenchile.com/wp-content/uploads/2023/06/logowebblanco.png" class="w-36 h-15" />
     </div>
 
-    <!-- Perfil -->
     <div class="flex items-center gap-2 text-white">
-      <!-- Imagen editable -->
       <div class="relative w-10 h-10">
         <img :src="profileImage" alt="Perfil" class="w-full h-full rounded-full object-cover" />
         <button @click="selectFile"
@@ -19,18 +16,19 @@
         <input type="file" ref="fileInput" accept="image/*" class="hidden" @change="previewImage" />
       </div>
 
-      <!-- Texto + flecha -->
       <div class="relative">
         <button @click="showDropdown = !showDropdown"
-          class="flex flex-col items-start px-2 py-1 rounded hover:bg-[#2a3748] transition-colors">
+          class="flex flex-col items-start px-2 py-1 rounded hover:bg-[#2a3748] transition-colors group">
           <div class="flex items-center gap-1">
             <strong class="font-medium">{{ userName }}</strong>
-            <span class="transition-transform duration-200 text-[10px]" :class="{ 'rotate-180': showDropdown }">▼</span>
+            <span class="transition-transform duration-200 text-[10px] hidden group-hover:inline" 
+                  :class="{ 'rotate-180 inline': showDropdown }">
+                ▼
+            </span>
           </div>
           <span class="text-gray-400 text-xs">{{ userRole }}</span>
         </button>
 
-        <!-- Dropdown -->
         <div v-if="showDropdown" class="absolute right-0 mt-1 w-40 bg-[#1f2937] text-white rounded-lg shadow-lg z-50">
           <ul class="list-none p-2">
             <li>

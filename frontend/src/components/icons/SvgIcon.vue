@@ -20,16 +20,13 @@
     <!-- Lock -->
     <svg v-else-if="name === 'lock'" xmlns="http://www.w3.org/2000/svg" class="w-20 h-20" fill="none"
         viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M12 11c.828 0 1.5.672 1.5 1.5V15
-         a1.5 1.5 0 01-3 0v-2.5
-         c0-.828.672-1.5 1.5-1.5z" />
-        <path stroke-linecap="round" stroke-linejoin="round" d="M6 11V8a6 6 0 1112 0v3" />
-        <rect x="6" y="11" width="12" height="10" rx="2" ry="2" />
+        <path stroke-linecap="round" stroke-linejoin="round"
+            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
     </svg>
 
     <!-- Check -->
     <svg v-else-if="name === 'check'" xmlns="http://www.w3.org/2000/svg" class="w-16 h-16" fill="none"
-        viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        viewBox="0 0 24 24" stroke="c   urrentColor" stroke-width="2">
         <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
     </svg>
 
@@ -135,10 +132,9 @@
     <!-- Dashboard -->
     <svg v-else-if="name === 'dashboard'" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none"
         viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-        <polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline>
-        <path
-            d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z">
-        </path>
+        <path stroke-linecap="round" stroke-linejoin="round"
+            d="M3 11.5L12 3l9 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 20.5v-9z" />
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 21V13h6v8" />
     </svg>
 
     <!-- Dispositivos -->
@@ -158,8 +154,10 @@
     <!-- Alertas -->
     <svg v-else-if="name === 'alertas'" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none"
         viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round"
-            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 00-5-5.917V4a1 1 0 10-2 0v1.083A6 6 0 006 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1h6z" />
+        <polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline>
+        <path
+            d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z">
+        </path>
     </svg>
 
     <!-- Motor de Reglas -->
@@ -209,7 +207,12 @@
         <path stroke-linecap="round" stroke-linejoin="round"
             d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
     </svg>
-
+    <!-- Telefono -->
+    <svg v-else-if="name === 'telefono'" xmlns="http://www.w3.org/2000/svg" class="w-10 h-10" fill="none"
+        viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round"
+            d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+    </svg>
 </template>
 
 <script>
