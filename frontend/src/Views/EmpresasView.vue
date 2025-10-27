@@ -1,223 +1,217 @@
 <template>
-  <div class="flex flex-col p-4">
-    <!-- Navbar -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-gray-700 pb-2">
-      <div class="w-full sm:flex-1">
-        <input v-model="searchTerm" type="text" placeholder="Buscar empresa..."
-          class="w-full px-3 py-1 text-gray-900 focus:outline-none focus:ring focus:ring-gray-500 rounded" />
+  <div class="p-2 sm:p-4 w-full flex flex-col">
+    <div class="flex flex-col sm:flex-row justify-between items-center mb-4 gap-3">
+      <!-- Barra de búsqueda -->
+      <div class="flex w-full sm:w-2/3 md:w-1/2">
+        <div class="flex w-full border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
+          <div class="flex items-center justify-center px-3 bg-gray-100 dark:bg-gray-800 text-gray-500">
+            <SvgIcon name="search" class="w-4 h-4 sm:w-5 sm:h-5" />
+          </div>
+          <input v-model="searchTerm" placeholder="Buscar empresa..."
+            class="flex-1 p-2 text-sm sm:text-base bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-300 focus:outline-none" />
+          <button v-if="searchTerm" @click="searchTerm = ''"
+            class="px-4 bg-[#ff6600] hover:bg-[#e65500] text-white font-semibold text-sm transition">
+            Limpiar
+          </button>
+        </div>
       </div>
 
-      <div class="flex w-full sm:w-auto gap-2 mt-2 sm:mt-0">
+      <!-- Botones -->
+      <div class="flex gap-2">
         <button @click.prevent="showAddModal = true"
-          class="relative inline-flex items-center justify-center w-full sm:w-auto px-3 py-2 font-mono font-medium tracking-tighter text-white bg-gray-800 rounded-lg overflow-hidden group">
-          <span
-            class="absolute w-0 h-0 bg-[#ff6600] rounded-full transition-all duration-500 ease-out group-hover:w-56 group-hover:h-56"></span>
-          <span
-            class="absolute inset-0 w-full h-full opacity-30 bg-gradient-to-b from-transparent via-transparent to-gray-700 rounded-lg -mt-1"></span>
-          <span class="relative">➕ Agregar Empresa</span>
+          class="flex items-center justify-center gap-2 px-4 py-2 bg-[#ff6600] hover:bg-[#e65500] text-white rounded-md font-medium transition">
+          <SvgIcon name="plus" class="w-5 h-5" />
+          <span>Agregar Empresa</span>
         </button>
 
-        <!-- Botón eliminar seleccionados -->
+        <!-- Eliminar seleccionados -->
         <transition name="fade-scale">
           <button v-if="selectedIds.length > 0" @click="deleteSelected"
-            class="bg-red-600 hover:bg-red-700 text-white p-2 rounded flex items-center justify-center"
-            title="Eliminar seleccionados">
+            class="flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition">
             <SvgIcon name="trash" class="w-5 h-5" />
           </button>
         </transition>
       </div>
     </div>
 
-    <!-- Tabla -->
-    <div class="flex-1 mt-4 flex flex-col">
-      <div class="overflow-y-auto min-h-[400px] max-h-[400px] rounded-lg shadow flex-1">
-        <table class="min-w-full bg-gray-800 text-white">
-          <thead>
-            <tr class="bg-[#102372] text-left">
-              <th class="py-6 px-4 w-1/12 flex items-center gap-1">
-                <input type="checkbox" v-model="selectAll" @change="toggleSelectAll" />
-              </th>
-              <th class="py-2 px-4">Fecha de Creación</th>
-              <th class="py-2 px-4">Nombre</th>
-              <th class="py-2 px-4">Rut</th>
-              <th class="py-2 px-4">Contacto</th>
-              <th class="py-2 px-4">Ciudad</th>
-              <th class="py-2 px-4">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="customer in paginatedCustomers" :key="customer.id"
-              class="border-t border-gray-700 bg-gray-20 hover:bg-gray-700 transition">
-              <td class="py-2 px-4">
-                <input type="checkbox" v-model="selectedIds" :value="customer.id" />
-              </td>
-              <td class="py-2 px-4">{{ customer.createdAt }}</td>
-              <td class="py-2 px-4">{{ customer.name }}</td>
-              <td class="py-2 px-4">{{ customer.rut }}</td>
-              <td class="py-2 px-4">{{ customer.contact }}</td>
-              <td class="py-2 px-4">{{ customer.city }}</td>
-              <td class="py-2 px-4 flex gap-2">
-                <!-- Editar -->
-                <button @click="editCustomer(customer)" title="Editar"
-                  class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md flex items-center gap-1">
-                  <SvgIcon name="pencil" class="w-4 h-4" />
-                </button>
+    <!-- 📋 Tabla -->
+    <div class="border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm overflow-y-auto max-h-[500px]">
+      <table class="min-w-full text-xs sm:text-sm md:text-base text-center border-collapse">
+        <thead class="bg-[#102372] dark:bg-[#102372] sticky top-0 z-10 text-gray-100">
+          <tr>
+            <th class="py-2 px-3">
+              <input type="checkbox" v-model="selectAll" @change="toggleSelectAll" />
+            </th>
+            <th class="py-2 px-3">Fecha de Creación</th>
+            <th class="py-2 px-3">Nombre</th>
+            <th class="py-2 px-3">RUT</th>
+            <th class="py-2 px-3">Contacto</th>
+            <th class="py-2 px-3">Ciudad</th>
+            <th class="py-2 px-3">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="customer in paginatedCustomers" :key="customer.id"
+            class="hover:bg-gray-50 dark:hover:bg-gray-700 border-b dark:border-gray-600 transition">
+            <td class="py-2 px-3">
+              <input type="checkbox" v-model="selectedIds" :value="customer.id" />
+            </td>
+            <td class="py-2 px-3">{{ customer.createdAt }}</td>
+            <td class="py-2 px-3">{{ customer.name }}</td>
+            <td class="py-2 px-3">{{ customer.rut }}</td>
+            <td class="py-2 px-3">{{ customer.contact }}</td>
+            <td class="py-2 px-3">{{ customer.city }}</td>
+            <td class="py-2 px-3 flex justify-center gap-2">
+              <!-- Editar -->
+              <button @click="editCustomer(customer)" title="Editar"
+                class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md flex items-center gap-1">
+                <SvgIcon name="pencil" class="w-4 h-4" />
+                <span class="hidden sm:inline">Editar</span>
+              </button>
 
-                <!-- Copiar -->
-                <button @click="copyCustomerData(customer)" title="Copiar"
-                  class="px-2 py-1 bg-gray-800 text-white rounded hover:bg-gray-700 relative flex items-center">
-                  <SvgIcon name="copy" class="w-5 h-5" />
-                  <span v-if="copiedId === customer.id"
-                    class="absolute -top-6 left-1/2 transform -translate-x-1/2 bg-gray-700 text-white text-xs px-2 py-1 rounded">
-                    Copiado!
-                  </span>
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+              <!-- Copiar -->
+              <button @click="copyCustomerData(customer)" title="Copiar"
+                class="px-3 py-1 bg-gray-800 text-white rounded hover:bg-gray-700 relative flex items-center gap-1">
+                <SvgIcon name="copy" class="w-4 h-4" />
+                <span v-if="copiedId === customer.id"
+                  class="absolute top-6 left-1/2 transform -translate-x-1/2 bg-gray-700 text-white text-xs px-2 py-1 rounded">
+                  Copiado!
+                </span>
+
+              </button>
+            </td>
+          </tr>
+          <tr v-if="paginatedCustomers.length === 0">
+            <td colspan="7" class="text-center py-4 text-gray-500 dark:text-gray-400">
+              No hay empresas registradas
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 📑 Paginación -->
+    <div
+      class="flex flex-col sm:flex-row justify-between items-center mt-4 text-xs sm:text-sm text-gray-700 dark:text-gray-300 gap-2 bg-[#f3f3f3] dark:bg-gray-800 p-2 rounded-md shadow-sm">
+      <div class="flex items-center gap-2">
+        <label for="rowsPerPage" class="text-xs">Filas por página:</label>
+        <select id="rowsPerPage" v-model.number="rowsPerPage"
+          class="border dark:border-gray-600 rounded px-2 py-1 text-xs sm:text-sm bg-white dark:bg-gray-700">
+          <option v-for="n in rowsPerPageOptions" :key="n" :value="n">{{ n }}</option>
+        </select>
       </div>
 
-      <!-- Paginación -->
-      <div
-        class="bg-gray-900 text-gray-300 p-4 rounded-b-lg shadow-inner flex flex-col sm:flex-row sm:justify-between items-center gap-4">
-        <div class="flex items-center gap-2">
-          <span>Filas por página:</span>
-          <select v-model="rowsPerPage" class="bg-gray-800 text-white rounded px-2 py-1 focus:outline-none">
-            <option v-for="option in rowsPerPageOptions" :key="option" :value="option">{{ option }}</option>
-          </select>
-        </div>
-
-        <ul class="flex justify-center gap-1 text-gray-300">
-          <li>
-            <button @click="previousPage" :disabled="currentPage === 1"
-              class="grid w-8 h-8 place-content-center rounded border border-gray-700 transition-colors hover:bg-gray-700 disabled:opacity-50"
-              aria-label="Previous page">
-              <SvgIcon name="chevron-left" class="w-4 h-4" />
-            </button>
-          </li>
-
-          <li v-for="page in totalPages" :key="page">
-            <button @click="currentPage = page" :class="[
-              'w-8 h-8 text-sm font-medium rounded border flex items-center justify-center',
-              page === currentPage
-                ? 'bg-indigo-600 border-indigo-600 text-white'
-                : 'border-gray-700 hover:bg-gray-700'
-            ]">
-              {{ page }}
-            </button>
-          </li>
-
-          <li>
-            <button @click="nextPage" :disabled="currentPage === totalPages"
-              class="grid w-8 h-8 place-content-center rounded border border-gray-700 transition-colors hover:bg-gray-700 disabled:opacity-50"
-              aria-label="Next page">
-              <SvgIcon name="chevron-right" class="w-4 h-4" />
-            </button>
-          </li>
-        </ul>
+      <div class="flex items-center gap-2">
+        <button @click="previousPage" :disabled="currentPage === 1"
+          class="px-2 py-1 rounded border border-gray-400 dark:border-gray-600 disabled:opacity-40 hover:bg-[#ff6600] hover:text-white transition">
+          <SvgIcon name="chevron-left" class="w-4 h-4" />
+        </button>
+        <span>Página {{ currentPage }} / {{ totalPages }}</span>
+        <button @click="nextPage" :disabled="currentPage === totalPages"
+          class="px-2 py-1 rounded border border-gray-400 dark:border-gray-600 disabled:opacity-40 hover:bg-[#ff6600] hover:text-white transition">
+          <SvgIcon name="chevron-right" class="w-4 h-4" />
+        </button>
       </div>
     </div>
   </div>
-  <!-- Sidebar Edición -->
+
+  <!-- 🟣 Sidebar edición -->
   <transition name="slide-fade">
     <div v-if="showEditSidebar" class="fixed inset-0 z-50 flex justify-end">
-
-      <!-- Fondo semi-transparente -->
       <div @click="showEditSidebar = false" class="absolute inset-0 bg-black bg-opacity-50"></div>
 
-      <!-- Sidebar -->
-      <div class="relative w-full max-w-md sm:w-96 bg-gray-800 text-white shadow-xl flex flex-col h-full">
-
-        <!-- Contenido scrollable -->
+      <div
+        class="relative w-full max-w-md sm:w-96 bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-xl flex flex-col h-full">
         <div class="flex-1 overflow-y-auto p-6">
-          <!-- Botón cerrar -->
-          <button @click="showEditSidebar = false" class="self-end p-2 rounded hover:bg-gray-700 transition mb-2">
+          <button @click="showEditSidebar = false"
+            class="self-end p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition mb-2">
             <SvgIcon name="close" class="w-6 h-6" />
           </button>
-
-          <h2 class="text-2xl font-bold mb-4">Editar Empresa</h2>
+          <h2 class="text-2xl font-bold mb-4 text-[#102372] dark:text-[#ff6600]">Editar Empresa</h2>
 
           <form @submit.prevent="updateCompany" class="flex flex-col gap-3">
             <input v-model="editingCompany.name" type="text" placeholder="Nombre de la empresa"
-              class="px-3 py-2 rounded bg-gray-700 text-white focus:outline-none w-full" required />
+              class="px-3 py-2 rounded border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none"
+              required />
 
             <input v-model="editingCompany.rut" type="text" placeholder="RUT de la empresa"
-              class="px-3 py-2 rounded bg-gray-700 text-white focus:outline-none w-full" required />
+              class="px-3 py-2 rounded border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none"
+              required />
 
             <input v-model="editingCompany.contact" type="text" placeholder="Contacto"
-              class="px-3 py-2 rounded bg-gray-700 text-white focus:outline-none w-full" required />
+              class="px-3 py-2 rounded border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none"
+              required />
 
             <input v-model="editingCompany.city" type="text" placeholder="Ciudad de la empresa"
-              class="px-3 py-2 rounded bg-gray-700 text-white focus:outline-none w-full" required />
+              class="px-3 py-2 rounded border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none"
+              required />
 
-            <!-- Plantillas -->
             <div class="mt-4">
-              <label class="block mb-1">Plantilla / Permisos:</label>
+              <label class="block mb-1 text-sm font-semibold text-[#102372] dark:text-[#ff6600]">Plantilla /
+                Permisos:</label>
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <div v-for="template in templates" :key="template.id" @click="editingCompany.templateId = template.id"
                   :class="[
                     'p-3 rounded-lg border cursor-pointer text-center transition',
                     editingCompany.templateId === template.id
-                      ? 'border-blue-500 bg-blue-700'
-                      : 'border-gray-600 hover:bg-gray-700'
+                      ? 'border-[#ff6600] bg-orange-100 dark:bg-[#e65500]/30'
+                      : 'border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800'
                   ]">
                   <h3 class="font-semibold">{{ template.name }}</h3>
-                  <p class="text-gray-300 text-sm">{{ template.description }}</p>
+                  <p class="text-gray-500 dark:text-gray-400 text-sm">{{ template.description }}</p>
                 </div>
               </div>
             </div>
           </form>
         </div>
 
-        <!-- Botones siempre visibles -->
-        <div class="p-6 border-t border-gray-700 bg-gray-800 flex justify-center gap-2">
-
-          <button @click="updateCompany" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded">
+        <div
+          class="p-6 border-t border-gray-200 dark:border-gray-700 flex justify-center gap-2 bg-gray-50 dark:bg-gray-900">
+          <button @click="updateCompany"
+            class="bg-[#ff6600] hover:bg-[#e65500] px-4 py-2 rounded text-white font-medium">
             Guardar Cambios
           </button>
-          <button @click="showEditSidebar = false" class="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded">
+          <button @click="showEditSidebar = false" class="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded text-white">
             Cancelar
           </button>
         </div>
-
       </div>
     </div>
   </transition>
 
-
-
-
-  <!-- Modal multi-paso -->
+  <!-- 🟠 Modal multi-paso -->
   <div v-if="showAddModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-    <div class="bg-gray-800 text-white rounded-lg relative flex flex-col w-full max-w-lg h-auto p-6">
+    <div
+      class="bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg relative flex flex-col w-full max-w-lg h-auto p-6 border border-gray-300 dark:border-gray-700 shadow-xl">
 
-      <!-- Botón volver paso 2 -> 1 -->
-      <button v-if="step === 2" @click="step = 1" class="absolute top-4 left-4 p-2 rounded hover:bg-gray-700 transition"
-        title="Volver">
+      <button v-if="step === 2" @click="step = 1"
+        class="absolute top-4 left-4 p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition" title="Volver">
         <SvgIcon name="arrow-left" class="w-6 h-6" />
       </button>
 
-      <h2 class="text-2xl font-bold mb-4 text-center">
+      <h2 class="text-2xl font-bold mb-4 text-center text-[#102372] dark:text-[#ff6600]">
         {{ step === 1 ? 'Agregar Empresa' : 'Seleccionar Template' }}
       </h2>
 
-      <span class="h-px bg-gray-600 mb-4"></span>
+      <span class="h-px bg-gray-300 dark:bg-gray-700 mb-4"></span>
 
       <!-- Paso 1 -->
       <form v-if="step === 1" @submit.prevent="goToNextStep" class="flex-1 flex flex-col gap-3 py-2 overflow-y-auto">
         <input v-model="newCompany.name" type="text" placeholder="Nombre de la empresa"
-          class="px-3 py-2 rounded bg-gray-700 text-white focus:outline-none w-full" required />
+          class="px-3 py-2 rounded border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none"
+          required />
 
         <input v-model="newCompany.rut" type="text" placeholder="RUT de la empresa"
-          class="px-3 py-2 rounded bg-gray-700 text-white focus:outline-none w-full" required
-          @input="formatRut(newCompany)" />
+          class="px-3 py-2 rounded border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none"
+          required @input="formatRut(newCompany)" />
 
         <input v-model="newCompany.contact" type="text" placeholder="Contacto"
-          class="px-3 py-2 rounded bg-gray-700 text-white focus:outline-none w-full" required />
+          class="px-3 py-2 rounded border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none"
+          required />
 
         <input v-model="newCompany.city" type="text" placeholder="Ciudad de la empresa"
-          class="px-3 py-2 rounded bg-gray-700 text-white focus:outline-none w-full" required />
+          class="px-3 py-2 rounded border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none"
+          required />
       </form>
 
       <!-- Paso 2 -->
@@ -225,37 +219,34 @@
         <div v-for="template in templates" :key="template.id" @click="selectedTemplate = template.id" :class="[
           'p-6 rounded-lg border cursor-pointer text-center transition',
           selectedTemplate === template.id
-            ? 'border-blue-500 bg-blue-700'
-            : 'border-gray-600 hover:bg-gray-700'
+            ? 'border-[#ff6600] bg-orange-100 dark:bg-[#e65500]/30'
+            : 'border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800'
         ]">
           <h3 class="text-lg font-semibold mb-2">{{ template.name }}</h3>
-          <p class="text-gray-300 text-sm">{{ template.description }}</p>
+          <p class="text-gray-500 dark:text-gray-400 text-sm">{{ template.description }}</p>
         </div>
       </div>
 
-      <!-- Botones del modal multi-paso -->
+      <!-- Botones -->
       <div class="flex justify-between mt-6">
-        <button @click="cancel" class="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded w-[48%]">
+        <button @click="cancel" class="bg-gray-500 hover:bg-gray-600 px-4 py-2 rounded w-[48%] text-white">
           Cancelar
         </button>
 
         <button v-if="step === 1" @click="goToNextStep" :disabled="!isStep1Valid"
-          :class="['px-4 py-2 rounded w-[48%]', isStep1Valid ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-600 opacity-50 cursor-not-allowed']">
+          :class="['px-4 py-2 rounded w-[48%] text-white font-medium', isStep1Valid ? 'bg-[#102372] hover:bg-[#0c1a5b]' : 'bg-[#102372]/50 cursor-not-allowed']">
           {{ modalButtonText }}
         </button>
 
-        <button v-else @click="addCompany" :disabled="isModalButtonDisabled" :class="[
-          'px-4 py-2 rounded w-[48%]',
-          isModalButtonDisabled
-            ? 'bg-green-600 opacity-50 cursor-not-allowed'
-            : 'bg-green-600 hover:bg-green-700'
-        ]">
+        <button v-else @click="addCompany" :disabled="isModalButtonDisabled"
+          :class="['px-4 py-2 rounded w-[48%] text-white font-medium', isModalButtonDisabled ? 'bg-[#ff6600]/50 cursor-not-allowed' : 'bg-[#ff6600] hover:bg-[#e65500]']">
           {{ modalButtonText }}
         </button>
       </div>
     </div>
   </div>
 </template>
+
 
 <script setup>
 import { ref, computed, watch } from 'vue'

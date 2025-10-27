@@ -85,46 +85,130 @@
             d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
             clip-rule="evenodd" />
     </svg>
+
     <!-- Logout / Cerrar sesión -->
     <svg v-else-if="name === 'logout'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
         stroke="currentColor" stroke-width="2">
         <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
     </svg>
+
     <!-- Close -->
     <svg v-else-if="name === 'close'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
         stroke="currentColor" stroke-width="2">
         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
     </svg>
+
     <!-- Plus / Agregar -->
     <svg v-else-if="name === 'plus'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
         stroke="currentColor" stroke-width="2">
         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
     </svg>
+
     <!-- Search / Lupa -->
     <svg v-else-if="name === 'search'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
         stroke="currentColor" stroke-width="2">
         <path stroke-linecap="round" stroke-linejoin="round"
             d="M21 21l-4.35-4.35m1.85-5.4a7.25 7.25 0 11-14.5 0 7.25 7.25 0 0114.5 0z" />
     </svg>
-    <!-- OK -->
+
+    <!-- OK / Mantención OK -->
     <svg v-else-if="name === 'ok'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
         stroke="currentColor" stroke-width="2">
         <path stroke-linecap="round" stroke-linejoin="round"
             d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
     </svg>
-    <!-- Proxima Mantencion -->
-    <svg v-else-if="name === 'vencida'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-        stroke="currentColor" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round"
-            d="M12 9v4m0 4h.01M12 2.25a9.75 9.75 0 100 19.5 9.75 9.75 0 000-19.5z" />
-    </svg>
-    <!-- Mantencion Vencida -->
+
+    <!-- Proxima Mantención -->
     <svg v-else-if="name === 'proxima'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
         stroke="currentColor" stroke-width="2">
         <path stroke-linecap="round" stroke-linejoin="round"
             d="M12 9v3.75m0 3.75h.01M3.6 18h16.8c1.2 0 2-1.3 1.4-2.4L13.4 3.4a1.5 1.5 0 00-2.8 0L2.2 15.6C1.6 16.7 2.4 18 3.6 18z" />
     </svg>
 
+    <!-- Mantención Vencida / Requiere Mantención -->
+    <svg v-else-if="name === 'vencida'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+        stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round"
+            d="M12 9v4m0 4h.01M12 2.25a9.75 9.75 0 100 19.5 9.75 9.75 0 000-19.5z" />
+    </svg>
+
+    <!-- Dashboard -->
+    <svg v-else-if="name === 'dashboard'" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none"
+        viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline>
+        <path
+            d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z">
+        </path>
+    </svg>
+
+    <!-- Dispositivos -->
+    <svg v-else-if="name === 'dispositivos'" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none"
+        viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="4" width="18" height="14" rx="2" ry="2" />
+        <path stroke-linecap="round" stroke-linejoin="round" d="M8 20h8M12 16v4" />
+    </svg>
+
+    <!-- Empresas -->
+    <svg v-else-if="name === 'empresas'" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none"
+        viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round"
+            d="M3 21V7a2 2 0 012-2h4a2 2 0 012 2v14H3zM15 21V11a2 2 0 012-2h4a2 2 0 012 2v10h-6z" />
+    </svg>
+
+    <!-- Alertas -->
+    <svg v-else-if="name === 'alertas'" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none"
+        viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round"
+            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 00-5-5.917V4a1 1 0 10-2 0v1.083A6 6 0 006 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1h6z" />
+    </svg>
+
+    <!-- Motor de Reglas -->
+    <svg v-else-if="name === 'motor'" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24"
+        stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+        <path stroke-linecap="round" stroke-linejoin="round" d="M8 6v12l4-4 4 4V6" />
+    </svg>
+
+    <!-- Fuentes de Datos -->
+    <svg v-else-if="name === 'fuentes'" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none"
+        viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <ellipse cx="12" cy="5" rx="8" ry="3" stroke-linecap="round" stroke-linejoin="round" />
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4 5v14c0 1.657 3.582 3 8 3s8-1.343 8-3V5" />
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4 12c0 1.657 3.582 3 8 3s8-1.343 8-3" />
+    </svg>
+
+
+    <!-- Usuarios -->
+    <svg v-else-if="name === 'usuarios'" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none"
+        viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="8" r="4" stroke-linecap="round" stroke-linejoin="round" />
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 20c0-3.314 2.686-6 6-6s6 2.686 6 6" />
+    </svg>
+
+
+    <!-- Reportes / Informes -->
+    <svg v-else-if="name === 'reportes'" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none"
+        viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round"
+            d="M6 2h12a2 2 0 012 2v16a2 2 0 01-2 2H6a2 2 0 01-2-2V4a2 2 0 012-2z" />
+        <path stroke-linecap="round" stroke-linejoin="round" d="M14 2v6h6" />
+        <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h8M8 16h8M8 20h4" />
+    </svg>
+
+
+    <!-- Mantenciones -->
+    <svg v-else-if="name === 'mantenciones'" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none"
+        viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" />
+    </svg>
+
+    <!-- Configuración -->
+    <svg v-else-if="name === 'configuracion'" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none"
+        viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="3" stroke-linecap="round" stroke-linejoin="round" />
+        <path stroke-linecap="round" stroke-linejoin="round"
+            d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
+    </svg>
 
 </template>
 
