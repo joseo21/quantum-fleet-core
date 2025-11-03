@@ -1,0 +1,212 @@
+<template>
+  <div class="flex items-center justify-center min-h-screen bg-gray-900 p-4"
+    style="background-image: url('https://img.freepik.com/foto-gratuito/colorato-nebulosa-di-sfondo_1048-1944.jpg')">
+    <div class="bg-gray-800 shadow-lg rounded-2xl p-8 w-full max-w-md flex flex-col items-center">
+      <!-- Logo -->
+      <img src="https://www.gpsenchile.com/wp-content/uploads/2023/06/logowebblanco.png" alt="Logo"
+        class="w-32 sm:w-40 mb-6" />
+
+      <h2 class="text-3xl font-semibold text-center mb-8 text-gray-100">
+        Bienvenido
+      </h2>
+
+      <form @submit.prevent="login" class="w-full space-y-6">
+        <!-- Usuario -->
+        <div>
+          <label class="block text-sm text-gray-300 mb-2">Usuario</label>
+          <input v-model="username" type="text" placeholder="Usuario"
+            class="w-full border border-gray-600 bg-gray-700 rounded-md px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:outline-none text-gray-100"
+            required />
+        </div>
+
+        <!-- Contraseña -->
+        <div class="flex flex-col w-full relative">
+          <div class="flex justify-between items-center mb-2">
+            <label class="text-sm text-gray-300">Contraseña</label>
+            <a href="#" @click.prevent="showForgot = true" class="text-teal-600 hover:text-teal-500 text-sm">
+              ¿Olvidaste tu contraseña?
+            </a>
+          </div>
+
+          <div class="relative">
+            <input v-model="password" :type="showPassword ? 'text' : 'password'" placeholder="••••••••••••"
+              class="w-full border border-gray-600 bg-gray-700 rounded-md px-4 pr-10 py-3 focus:ring-2 focus:ring-teal-500 focus:outline-none text-gray-100"
+              required />
+            <!-- Botón del ojo -->
+            <button type="button" @click="showPassword = !showPassword"
+              class="absolute inset-y-0 right-3 flex items-center text-gray-400">
+              <SvgIcon :name="showPassword ? 'eye' : 'eye-off'" />
+            </button>
+          </div>
+        </div>
+
+        <!-- Botón -->
+        <button type="submit"
+          class="w-full bg-teal-600 hover:bg-teal-500 text-white font-medium py-3 rounded-md transition-all text-lg">
+          Ingresar
+        </button>
+
+        <!-- Error -->
+        <p v-if="error" class="text-red-500 text-center text-sm mt-2">{{ error }}</p>
+
+        <!-- Links -->
+        <div class="flex justify-center items-center gap-2 text-sm mt-2">
+          <span class="text-white">Contáctanos:</span>
+          <a href="#" @click.prevent="showContact = true" class="text-teal-600 hover:text-teal-500">
+            informatica@sinergygroup.cl
+          </a>
+        </div>
+      </form>
+
+      <!-- Modal Olvidé contraseña -->
+      <div v-if="showForgot" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4"
+        @click.self="showForgot = false">
+        <div class="w-full max-w-md rounded-lg bg-gray-800 dark:bg-gray-900 p-6 relative space-y-6">
+          <!-- Botón cerrar -->
+          <button @click="showForgot = false"
+            class="absolute top-2 right-2 text-gray-300 hover:text-red-500 font-bold text-2xl">
+            &times;
+          </button>
+
+          <!-- Icono superior -->
+          <div class="flex justify-center mb-4">
+            <SvgIcon name="lock" class="h-16 w-16 text-yellow-500" />
+          </div>
+
+          <h2 class="text-center text-2xl font-semibold text-gray-100">
+            ¿No recuerdas tu contraseña?
+          </h2>
+
+          <!-- Formulario / Mensaje de éxito -->
+          <div class="space-y-4">
+            <template v-if="successForgot">
+              <div class="flex flex-col items-center justify-center gap-2">
+                <SvgIcon name="check" class="h-12 w-12 text-green-500" />
+                <p class="text-green-500 font-semibold text-center">
+                  Se ha enviado correctamente al sistema de Tickets, favor de esperar su respuesta.
+                </p>
+              </div>
+            </template>
+
+            <template v-else>
+              <form @submit.prevent="handleForgot" class="space-y-4">
+                <!-- Email Input -->
+                <div class="relative">
+                  <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                    <SvgIcon name="mail" class="h-5 w-5" />
+                  </span>
+                  <input id="email" type="email" v-model="emailForgot" placeholder="Ingresa tu email"
+                    class="w-full rounded-lg border border-gray-600 bg-gray-700 text-gray-100 px-4 py-2.5 pl-10 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    required />
+                </div>
+
+                <!-- Botones centrados -->
+                <div class="flex justify-center gap-4">
+                  <button type="submit"
+                    class="flex h-10 items-center justify-center rounded-lg bg-teal-600 text-white hover:bg-teal-500 px-6 py-2 transition">
+                    Enviar Reset
+                  </button>
+                  <button @click="showForgot = false" type="button"
+                    class="px-6 py-2 rounded border text-gray-100 hover:border-teal-500 hover:text-teal-500 transition">
+                    Cancelar
+                  </button>
+                </div>
+              </form>
+            </template>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Contáctanos -->
+      <div v-if="showContact" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
+        @click.self="showContact = false">
+        <div class="bg-gray-800 dark:bg-gray-900 p-6 rounded-lg shadow-lg w-full max-w-md relative space-y-6">
+          <!-- Botón cerrar -->
+          <button @click="showContact = false"
+            class="absolute top-2 right-2 text-gray-300 hover:text-red-500 font-bold text-2xl">
+            &times;
+          </button>
+          <div class="flex items-center gap-4 justify-center">
+            <SvgIcon name="telefono" class="h-10 w-10 text-green-500" />
+            <h2 class="text-2xl font-semibold text-gray-100">Contáctanos</h2>
+
+          </div>
+
+
+          <div class="space-y-4">
+            <template v-if="successContact">
+              <div class="flex flex-col items-center justify-center gap-2">
+                <SvgIcon name="check" class="h-12 w-12 text-green-500" />
+                <p class="text-green-500 font-semibold text-center">
+                  Mensaje enviado correctamente al sistema de Tickets. Favor esperar respuesta.
+                </p>
+              </div>
+            </template>
+
+            <template v-else>
+              <form @submit.prevent="handleContact" class="space-y-4">
+                <input v-model="nombre" type="text" placeholder="Nombre"
+                  class="w-full border border-gray-600 bg-gray-700 text-gray-100 rounded px-2 py-1 focus:outline-none focus:border-teal-500"
+                  required />
+                <input v-model="email" type="email" placeholder="Email"
+                  class="w-full border border-gray-600 bg-gray-700 text-gray-100 rounded px-2 py-1 focus:outline-none focus:border-teal-500"
+                  required />
+                <textarea v-model="mensaje" placeholder="Mensaje" rows="4"
+                  class="w-full border border-gray-600 bg-gray-700 text-gray-100 rounded px-2 py-1 focus:outline-none focus:border-teal-500"
+                  required></textarea>
+
+                <button type="submit"
+                  class="w-full bg-teal-600 hover:bg-teal-500 text-white font-bold py-2 rounded transition">
+                  Enviar
+                </button>
+              </form>
+            </template>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import users from '@/data/users.json'
+import SvgIcon from '@/components/icons/SvgIcon.vue'
+
+const showForgot = ref(false)
+const showContact = ref(false)
+const successForgot = ref(false)
+const successContact = ref(false)
+const emailForgot = ref('')
+const nombre = ref('')
+const email = ref('')
+const mensaje = ref('')
+const username = ref('')
+const password = ref('')
+const showPassword = ref(false)
+const error = ref('')
+const router = useRouter()
+
+const handleForgot = () => {
+  successForgot.value = true
+  emailForgot.value = ''
+}
+
+const handleContact = () => {
+  successContact.value = true
+  nombre.value = ''
+  email.value = ''
+  mensaje.value = ''
+}
+
+const login = () => {
+  const userFound = users.find(u => u.username === username.value && u.password === password.value)
+  if (!userFound) {
+    error.value = 'Usuario o contraseña incorrectos'
+    return
+  }
+  localStorage.setItem('user', JSON.stringify(userFound))
+  router.push('/AdminDashboard')
+}
+</script>
