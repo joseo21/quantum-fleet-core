@@ -7,11 +7,15 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - pgdata:/var/lib/postgresql/data
-    ports: ["5432:5432"]
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
 
   redis:
     image: redis:7
-    ports: ["6379:6379"]
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
 
   emqx:
     image: emqx/emqx:5.7.0
@@ -29,55 +33,72 @@ services:
     env_file: .env
     volumes:
       - ./backend:/app
-    depends_on: [postgres, redis, emqx]
-    ports: ["8000:8000"]
+    depends_on:
+      - postgres
+      - redis
+      - emqx
+    ports:
+      - "8000:8000"
     environment:
       - PYTHONPATH=/app
+    restart: unless-stopped
+
   mqtt-worker:
     build: ./services/mqtt-worker
     env_file: .env
     volumes:
       - ./services/mqtt-worker:/app
-    depends_on: [emqx, api]
+    depends_on:
+      - emqx
+      - api
     restart: unless-stopped
 
   teltonika-tcp:
     build:
       context: ./services/teltonika-tcp
-    container_name: teltonika-tcp
     environment:
       API_BASE: http://api:8000
-      LOG_LEVEL: DEBUG          # o INFO en prod
-      LISTEN_HOST: 0.0.0.0
-      LISTEN_PORT: "5027"
+      TCP_HOST: 0.0.0.0
+      TCP_PORT: "5027"
       REQUEST_TIMEOUT: "5.0"
+      READ_TIMEOUT: "30.0"
+      LOG_LEVEL: DEBUG
+      # Fallback DB
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      # Auditoría OFF
+      AUDIT_ENABLED: "0"
+      # Debug opcional de payloads
+      HEX_DUMP_DEBUG: "1"
     ports:
-      - "5027:5027"
+      - "5027:5027/tcp"
     depends_on:
       - api
-
+      - postgres
+    restart: unless-stopped
+    volumes:
+      - ./services/teltonika-tcp/server.py:/app/server.py:ro
 
   external-collector:
     build: ./services/external-collector
-    container_name: external-collector
+    # container_name: external-collector
     environment:
       API_BASE: http://api:8000
       LOG_LEVEL: INFO
       STATE_FILE: /data/state.json
       IO_NAME_TO_ID: '{"externalVoltage":"66","ignition":"239"}'
       SOURCES_FILE: /etc/collector/sources.json
-      # Dónde está tu API (ya la tienes corriendo en :8000)
       AUDIT_API_BASE_URL: "http://api:8000"
-      # (opcional) Si tu API exige una API Key/JWT para /audit/events:
-      AUDIT_API_TOKEN: ""     # deja vacío si no usas auth
-      # (opcional) Desactivar auditoría sin tocar código
-      AUDIT_ENABLED: "1"      # "0" para deshabilitar
+      AUDIT_API_TOKEN: ""
+      AUDIT_ENABLED: "1"
     volumes:
       - ./services/external-collector/sources.json:/etc/collector/sources.json:ro
       - ./data/collector:/data
     depends_on:
       - api
-
+    restart: unless-stopped
 
 volumes:
   pgdata:
