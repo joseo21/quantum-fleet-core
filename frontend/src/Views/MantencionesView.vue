@@ -39,7 +39,7 @@ const mantencionesPorPatente = reactive({})
 // ------------------------------
 // 🔹 Lista principal de vehículos
 // ------------------------------
-const mantenciones  = [
+const mantenciones = ref([
   { patente: 'GHI901 - N°1', odometro: 12500, estado: 'OK' },
   { patente: 'JKL234 - N°2', odometro: 98500, estado: 'Requiere mantención' },
   { patente: 'MNO567 - N°3', odometro: 35000, estado: 'Próxima mantención' },
@@ -50,7 +50,8 @@ const mantenciones  = [
   { patente: 'BCD90D - N°8', odometro: 155000, estado: 'Requiere mantención' },
   { patente: 'EFG23E - N°9', odometro: 75500, estado: 'Próxima mantención' },
   { patente: 'HIJ56F - N°10', odometro: 1900, estado: 'OK' },
-];
+]);
+
 const horometrosActuales = {
   'ABC123': 145,   // vehículo 1
   'XYZ789': 230,  // vehículo 2

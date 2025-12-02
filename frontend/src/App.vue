@@ -1,13 +1,14 @@
 <template>
-  <div class="min-h-screen flex flex-col bg-gray-100">
+  <div class="fixed inset-0 flex flex-col bg-gray-50 overflow-hidden font-sans">
     <!-- Si NO estás en LoginAdmin -->
     <template v-if="!isLoginPage">
       <AppHeader :showProfile="showProfile" @toggle-sidebar="toggleSidebar" />
 
-      <div class="flex flex-1">
+
+      <div class="flex flex-1 overflow-hidden">
         <AppSidebar v-model:isOpen="showSidebar" />
 
-        <main class="flex-1 p-4 overflow-auto bg-[#f3f3f3]">
+        <main class="flex-1 p-6 overflow-auto bg-[#f3f3f3]">
           <router-view />
         </main>
       </div>
@@ -23,8 +24,8 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
-import AppHeader from './components/AppHeader.vue'
-import AppSidebar from './components/AppSidebar.vue'
+import AppHeader from './components/Layout/AppHeader.vue'
+import AppSidebar from './components/Layout/AppSidebar.vue'
 
 const route = useRoute()
 

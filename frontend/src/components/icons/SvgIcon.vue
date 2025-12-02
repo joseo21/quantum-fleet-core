@@ -213,6 +213,65 @@
         <path stroke-linecap="round" stroke-linejoin="round"
             d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
     </svg>
+    <!-- Tables -->
+    <svg v-else-if="name === 'tables'" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none"
+        viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h18v4H3V3zm0 6h18v4H3V9zm0 6h18v4H3v-4z" />
+    </svg>
+    <!-- Ingresar -->
+    <svg v-else-if="name === 'ingresar'" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none"
+        viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+    </svg>
+    <!-- Volumen -->
+    <svg v-else-if="name === 'volumen'" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none"
+        viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <rect x="4" y="4" width="10" height="16" rx="2" ry="2" stroke-linecap="round" stroke-linejoin="round" />
+        <rect x="6.5" y="6.5" width="5" height="3" rx="0.6" stroke-linecap="round" stroke-linejoin="round" />
+        <path d="M3 20h14" stroke-linecap="round" stroke-linejoin="round" />
+        <path d="M14 9c2 0 3 .7 3 2.5v6.5" stroke-linecap="round" stroke-linejoin="round" />
+        <path d="M17 9l2-1 1 1.5-2 1" stroke-linecap="round" stroke-linejoin="round" />
+    </svg>
+    <!-- Gasto -->
+    <svg v-else-if="name === 'gasto'" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24"
+        stroke="currentColor" stroke-width="2">
+        <rect x="2" y="6" width="20" height="12" rx="2" ry="2" stroke-linecap="round" stroke-linejoin="round" />
+        <circle cx="12" cy="12" r="2" />
+    </svg>
+    <!-- Precio/L -->
+    <svg v-else-if="name === 'precioL'" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none"
+        viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <polyline stroke-linecap="round" stroke-linejoin="round" points="4 14 10 10 14 12 20 6" />
+        <polyline stroke-linecap="round" stroke-linejoin="round" points="20 10 20 6 16 6" />
+    </svg>
+    <!-- Eventos -->
+    <svg v-else-if="name === 'eventos'" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none"
+        viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="4" width="18" height="18" rx="2" stroke-linecap="round" stroke-linejoin="round" />
+        <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18" />
+    </svg>
+    <!-- Vehículos -->
+    <svg v-else-if="name === 'vehiculos'" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none"
+        viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round"
+            d="M3 13l2-5h14l2 5v5a1 1 0 01-1 1h-1a2 2 0 01-4 0H9a2 2 0 01-4 0H4a1 1 0 01-1-1v-5z" />
+        <circle cx="9" cy="18" r="1.5" />
+        <circle cx="15" cy="18" r="1.5" />
+    </svg>
+
+    <!-- Distancia -->
+    <svg v-else-if="name === 'distancia'" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none"
+        viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 20l3-6-3-6m6 12l3-6-3-6" />
+    </svg>
+
+    <!-- Upload -->
+    <svg v-else-if="name === 'upload'" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none"
+        viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round"
+            d="M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 9l5-5m0 0l5 5m-5-5v12" />
+    </svg>
+
 </template>
 
 <script>

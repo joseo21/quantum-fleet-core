@@ -3,12 +3,16 @@ import AdminDashboard from '../Views/AdminDashboard.vue'
 import Empresas from '../Views/EmpresasView.vue'
 import LoginAdmin from '@/Views/LoginAdmin.vue'
 import MantencionesView from '@/Views/MantencionesView.vue'
+import Copec from '@/Views/CopecDashboard.vue'
+import Dispositivos from '@/Views/DispositivosView.vue'
 
 const routes = [
   { path: '/', name: 'LoginAdmin', component: LoginAdmin },
   { path: '/AdminDashboard', name: 'AdminDashboard', component: AdminDashboard },
   { path: '/empresas', name: 'Empresas', component: Empresas },
-  { path: '/mantenciones', name: 'MantencionesView', component: MantencionesView }
+  { path: '/mantenciones', name: 'MantencionesView', component: MantencionesView },
+  { path: '/copec', name: 'Copec', component: Copec },
+  { path: '/dispositivos', name: 'Dispositivos', component: Dispositivos },
 
 ]
 

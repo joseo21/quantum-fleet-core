@@ -17,7 +17,7 @@
 
       <div class="flex gap-2">
         <button @click.prevent="showAddModal = true"
-          class="flex items-center justify-center gap-2 px-4 py-2 bg-[#ff6600] hover:bg-[#e65500] text-white rounded-md font-medium transition">
+          class="flex items-center justify-center gap-2 px-4 py-2 bg-[#102372] hover:bg-[#e65500] text-white rounded-md font-medium transition">
           <SvgIcon name="plus" class="w-5 h-5" />
           <span>Agregar Empresa</span>
         </button>
@@ -131,15 +131,23 @@ const isValidRut = (rut) => /^(\d{1,2}\.\d{3}\.\d{3}-[\dkK])$/.test(rut)
 
 // Computed: filtrado y paginación
 const filteredCustomers = computed(() => {
-  if (!searchTerm.value) return customers.value
-  const term = searchTerm.value.toLowerCase()
-  return customers.value.filter(c =>
-    c.name.toLowerCase().includes(term) ||
-    c.rut.toLowerCase().includes(term) ||
-    c.contact.toLowerCase().includes(term) ||
-    c.createdAt.toLowerCase().includes(term)
-  )
+  let list = [...customers.value]
+
+  // FILTRAR
+  if (searchTerm.value) {
+    const term = searchTerm.value.toLowerCase()
+    list = list.filter(c =>
+      c.name.toLowerCase().includes(term) ||
+      c.rut.toLowerCase().includes(term) ||
+      c.contact.toLowerCase().includes(term) ||
+      c.createdAt.toLowerCase().includes(term)
+    )
+  }
+
+  // 🔥 ORDENAR POR CREATEDAT (más nuevos → más antiguos)
+  return list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
 })
+
 
 // Paginar clientes
 const paginatedCustomers = computed(() => {

@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "autoprefixer": "^10",
+    "axios": "^1.13.2",
     "core-js": "^3.8.3",
     "postcss": "^8",
     "tailwindcss": "^3",
@@ -37,9 +38,15 @@
     "parserOptions": {
       "parser": "@babel/eslint-parser"
     },
+    "globals": {
+      "defineProps": "readonly",
+      "defineEmits": "readonly",
+      "defineExpose": "readonly",
+      "withDefaults": "readonly"
+    },
     "rules": {}
   },
-  "browserslist": [
+    "browserslist": [
     "> 1%",
     "last 2 versions",
     "not dead",
