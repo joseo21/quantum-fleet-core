@@ -1,4 +1,3 @@
-<!-- SidebarDevice.vue -->
 <template>
     <!-- OVERLAY -->
     <div v-if="open" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-40" @click="handleOverlayClick"></div>
@@ -6,34 +5,48 @@
     <!-- SIDEBAR -->
     <transition name="slide-sidebar">
         <div v-if="open" class="fixed top-0 right-0 h-full bg-white dark:bg-gray-900 shadow-xl z-50
-             border-l border-gray-200 dark:border-gray-700 flex flex-col" style="width: 50vw;">
+                   border-l border-gray-200 dark:border-gray-700 flex flex-col" style="width: 50vw;">
 
-            <!-- ⭐ HEADER CON TABS -->
-            <div class="border-b border-gray-200 dark:border-gray-700 px-4 pt-4">
+            <!-- ⭐ HEADER AZUL CORPORATIVO -->
+            <div class="px-5 pt-5 pb-3 border-b border-[#143ba7]
+                        bg-[#102372] text-white">
 
-                <div class="flex justify-between items-center mb-3">
-                    <h2 class="text-lg font-semibold text-gray-800 dark:text-white">
-                        Detalles del Dispositivo
-                    </h2>
+                <!-- TÍTULO + BOTÓN CERRAR -->
+                <div class="flex items-center justify-between mb-4">
 
-                    <button @click="closeSidebar" class="p-2 hover:bg-gray-200 dark:hover:bg-gray-800 rounded">
-                        <SvgIcon name="close" class="w-5 h-5" />
+                    <div class="flex items-center gap-3">
+                        <div class="p-2 rounded-xl bg-white/20">
+                            <SvgIcon name="dispositivos" class="w-5 h-5 text-white" />
+                        </div>
+
+                        <h2 class="text-lg font-semibold tracking-tight">
+                            Detalles del Dispositivo
+                        </h2>
+                    </div>
+
+                    <button @click="closeSidebar" class="p-2 rounded-lg hover:bg-white/20 transition">
+                        <SvgIcon name="close" class="w-5 h-5 text-white" />
                     </button>
                 </div>
 
-                <!-- ⭐ MENÚ DE TABS -->
-                <div class="flex gap-4 text-sm font-medium border-b border-gray-300 dark:border-gray-700">
+                <!-- ⭐ TABS CON FONDO MÁS CLARO (SEPARACIÓN VISUAL) -->
+                <div class="flex gap-6 text-sm font-medium bg-[#143ba7] px-3 py-2 rounded-md">
+
                     <button v-for="t in tabs" :key="t.value" @click="onTabClick(t.value)" :class="[
-                        'pb-2 px-1 transition',
+                        'pb-1 relative transition font-semibold',
                         activeTab === t.value
-                            ? 'border-b-2 border-[#102372] text-[#102372] dark:text-[#ff6600]'
-                            : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300',
+                            ? 'text-white'
+                            : 'text-white/70 hover:text-white/90',
                         isEditing ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
                     ]">
                         {{ t.label }}
+
+                        <!-- Línea activa -->
+                        <span v-if="activeTab === t.value"
+                            class="absolute left-0 right-0 -bottom-0.5 h-[3px] bg-white rounded-full">
+                        </span>
                     </button>
                 </div>
-
             </div>
 
             <!-- ⭐ CONTENT -->
@@ -50,17 +63,11 @@
 
                 <UrlView v-else-if="activeTab === 'url'" :device-id="localDevice.id" :token="localDevice.token"
                     :tipo="localDevice.type" />
+                <TelemetriaView v-else-if="activeTab === 'telemetria'" :data="localDevice.data" />
 
-                <TelemetriaView v-else-if="activeTab === 'telemetria'" :last-report="localDevice.lastReport"
-                    :last-level="localDevice.lastLevel" :last-liters="localDevice.lastLiters" />
 
-                <!-- ⭐ CONTROL DE VERSIONES -->
-                <ControlDeVersiones 
-                    v-if="activeTab === 'versiones'" 
-                    :versions="localDevice.versions"
-                    @confirm-rollback="openRollbackModal"
-                    @show-details="openDetailsModal"
-                />
+                <ControlDeVersiones v-if="activeTab === 'versiones'" :versions="localDevice.versions"
+                    @confirm-rollback="openRollbackModal" @show-details="openDetailsModal" />
 
             </div>
 
@@ -92,24 +99,16 @@
     </transition>
 
     <!-- ============================ -->
-    <!-- ⭐ MODALES (fuera del sidebar) -->
+    <!-- MODALES -->
     <!-- ============================ -->
-    <RollbackConfirmModal
-        v-if="showRollbackModal"
-        :show="showRollbackModal"
-        :version="versionToRollback"
-        :device="localDevice"
-        @cancel="showRollbackModal = false"
-        @confirm="doRollback"
-    />
+    <RollbackConfirmModal v-if="showRollbackModal" :show="showRollbackModal" :version="versionToRollback"
+        :device="localDevice" @cancel="showRollbackModal = false" @confirm="doRollback" />
 
-    <ModalDetalles
-        v-if="showDetailsModal"
-        :show="showDetailsModal"
-        :version="detailsVersion"
-        @close="showDetailsModal = false"
-    />
+    <ModalDetalles v-if="showDetailsModal" :show="showDetailsModal" :version="detailsVersion"
+        @close="showDetailsModal = false" />
 </template>
+
+
 
 <script setup>
 import { ref, watch } from 'vue'
@@ -122,6 +121,8 @@ import TelemetriaView from '@/components/DispositivosUi/SidebarUi/TelemetriaView
 import ControlDeVersiones from '@/components/DispositivosUi/SidebarUi/ControlDeVersiones.vue'
 import RollbackConfirmModal from '@/components/DispositivosUi/SidebarUi/ModalConfirmacion.vue'
 import ModalDetalles from '@/components/DispositivosUi/SidebarUi/ModalDetalles.vue'
+import telemetriaDummyData from "@/dummy/telemetriaDummy.js";
+
 
 /* ============================== PROPS ============================== */
 const props = defineProps({
@@ -159,11 +160,20 @@ watch(
     () => props.device,
     (newVal) => {
         if (newVal) {
+
+            // Asignar los datos del dispositivo real
             localDevice.value = {
                 ...newVal,
                 identifier: newVal.identifier ?? newVal.imei ?? newVal.token ?? ''
             }
+
+            // 🔵 Agregar el array de telemetría ficticia
+            localDevice.value.data = telemetriaDummyData;
+
+            // Snapshot original para rollback/edición
             originalSnapshot.value = { ...localDevice.value }
+
+            // Estado inicial del sidebar
             activeTab.value = 'detalle'
             isEditing.value = false
             editingSection.value = null
@@ -171,6 +181,7 @@ watch(
     },
     { immediate: true }
 )
+
 
 /* ============================== TABS ============================== */
 const onTabClick = (tabValue) => {
@@ -299,15 +310,19 @@ const saveChanges = () => {
 .slide-sidebar-enter-from {
     transform: translateX(100%);
 }
+
 .slide-sidebar-enter-to {
     transform: translateX(0);
 }
+
 .slide-sidebar-leave-from {
     transform: translateX(0);
 }
+
 .slide-sidebar-leave-to {
     transform: translateX(100%);
 }
+
 .slide-sidebar-enter-active,
 .slide-sidebar-leave-active {
     transition: transform 0.35s ease;
