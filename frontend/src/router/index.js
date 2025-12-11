@@ -5,6 +5,7 @@ import LoginAdmin from '@/Views/LoginAdmin.vue'
 import MantencionesView from '@/Views/MantencionesView.vue'
 import Copec from '@/Views/CopecDashboard.vue'
 import Dispositivos from '@/Views/DispositivosView.vue'
+import ReportesView from '@/Views/ReportesView.vue'
 
 const routes = [
   { path: '/', name: 'LoginAdmin', component: LoginAdmin },
@@ -13,6 +14,7 @@ const routes = [
   { path: '/mantenciones', name: 'MantencionesView', component: MantencionesView },
   { path: '/copec', name: 'Copec', component: Copec },
   { path: '/dispositivos', name: 'Dispositivos', component: Dispositivos },
+  { path: '/reportes', name: 'ReportesView', component: ReportesView },
 
 ]
 
