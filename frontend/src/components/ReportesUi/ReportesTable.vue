@@ -8,35 +8,36 @@
 
     <!-- TABLA CON SCROLL -->
     <div class="max-h-[380px] overflow-y-auto custom-scroll">
-
       <table class="w-full text-sm">
 
-        <!-- ===========================
-             HEADER DINÁMICO
-        ============================ -->
+        <!-- HEADER -->
         <thead class="bg-[#102372] text-white text-xs uppercase font-bold sticky top-0 shadow-md">
           <tr>
 
             <!-- DISPOSITIVO -->
-            <th class="th-sort px-5 py-3 text-left cursor-pointer" @click="sortBy('dispositivo')">
+            <th
+              class="th-sort px-5 py-3 text-left cursor-pointer"
+              @click="sortBy('dispositivo')"
+            >
               <span>Dispositivo</span>
-
               <span class="sort-arrow">
                 {{ sort.key === 'dispositivo'
-                    ? (sort.order === 'asc' ? '▲' : '▼')
-                    : '▼'
+                  ? (sort.order === 'asc' ? '▲' : '▼')
+                  : '▼'
                 }}
               </span>
             </th>
 
             <!-- FECHA -->
-            <th class="th-sort px-5 py-3 text-left cursor-pointer" @click="sortBy('fecha')">
+            <th
+              class="th-sort px-5 py-3 text-left cursor-pointer"
+              @click="sortBy('fecha')"
+            >
               <span>Fecha</span>
-
               <span class="sort-arrow">
                 {{ sort.key === 'fecha'
-                    ? (sort.order === 'asc' ? '▲' : '▼')
-                    : '▼'
+                  ? (sort.order === 'asc' ? '▲' : '▼')
+                  : '▼'
                 }}
               </span>
             </th>
@@ -45,27 +46,36 @@
             <th
               v-for="col in props.variables"
               :key="col"
-              class="px-5 py-3 text-left"
+              class="th-sort px-5 py-3 text-left cursor-pointer"
+              @click="sortBy(col)"
             >
-              {{ col.replace(/_/g, ' ') }}
+              <span>{{ col.replace(/_/g, ' ') }}</span>
+              <span class="sort-arrow">
+                {{ sort.key === col
+                  ? (sort.order === 'asc' ? '▲' : '▼')
+                  : '▼'
+                }}
+              </span>
             </th>
 
           </tr>
         </thead>
 
-        <!-- ===========================
-             CUERPO PIVOTEADO
-        ============================ -->
+        <!-- BODY -->
         <tbody>
           <tr
             v-for="row in sortedRows"
             :key="row.__id"
             class="border-b hover:bg-gray-50 odd:bg-gray-50 even:bg-white transition"
           >
-            <td class="px-5 py-3 font-semibold text-gray-900">{{ row.dispositivo }}</td>
-            <td class="px-5 py-3 text-gray-700">{{ row.fecha }}</td>
+            <td class="px-5 py-3 font-semibold text-gray-900">
+              {{ row.dispositivo }}
+            </td>
 
-            <!-- CELDAS GENERADAS -->
+            <td class="px-5 py-3 text-gray-700">
+              {{ row.fecha }}
+            </td>
+
             <td
               v-for="col in props.variables"
               :key="col"
@@ -78,21 +88,21 @@
               >
                 {{ row[col] }}
               </span>
-
               <span v-else class="text-gray-400 text-xs">—</span>
             </td>
           </tr>
 
-          <!-- SIN DATOS -->
           <tr v-if="sortedRows.length === 0">
-            <td :colspan="2 + props.variables.length" class="py-8 text-center text-gray-500">
+            <td
+              :colspan="2 + props.variables.length"
+              class="py-8 text-center text-gray-500"
+            >
               No hay datos para el filtro seleccionado.
             </td>
           </tr>
         </tbody>
 
       </table>
-
     </div>
   </div>
 </template>
@@ -130,6 +140,20 @@ function parseFecha(f) {
 }
 
 /* ===========================
+   NORMALIZACIÓN (CLAVE)
+=========================== */
+function normalizeValue(v) {
+  if (v === undefined || v === null || v === "" || v === "—") return null
+
+  // Limpia separadores tipo "12.900" o "12,900"
+  const cleaned = String(v).replace(/\./g, "").replace(",", ".")
+  const num = Number(cleaned)
+
+  if (!Number.isNaN(num)) return num
+  return String(v).toLowerCase()
+}
+
+/* ===========================
    FILTRO POR FECHA
 =========================== */
 function isInRange(f) {
@@ -148,12 +172,9 @@ function isInRange(f) {
       last_30d: 24 * 30,
       last_180d: 24 * 180
     }
-
     const hours = H[r.value]
     if (!hours) return true
-
-    const from = new Date(now - hours * 3600 * 1000)
-    return fecha >= from
+    return fecha >= new Date(now - hours * 3600 * 1000)
   }
 
   if (r?.type === "custom") {
@@ -171,7 +192,7 @@ const rows = computed(() => {
 
   for (const device of props.items || []) {
     for (const dato of device.datos || []) {
-      if (props.variables.length && !props.variables.includes(dato.clave)) continue
+      if (!props.variables.includes(dato.clave)) continue
       if (!isInRange(dato.fecha)) continue
 
       const id = `${device.id}-${dato.fecha}`
@@ -192,20 +213,45 @@ const rows = computed(() => {
 })
 
 /* ===========================
-   ORDENAMIENTO FINAL
+   ORDEN FINAL (ARREGLADO)
 =========================== */
 const sortedRows = computed(() => {
-  return [...rows.value].sort((a, b) => {
-    const A = sort.key === "fecha" ? parseFecha(a.fecha) : a[sort.key]
-    const B = sort.key === "fecha" ? parseFecha(b.fecha) : b[sort.key]
+  const dir = sort.order === "asc" ? 1 : -1
 
-    if (sort.order === "asc") return A > B ? 1 : -1
-    return A < B ? 1 : -1
+  return [...rows.value].sort((a, b) => {
+
+    // Fecha
+    if (sort.key === "fecha") {
+      const A = parseFecha(a.fecha)
+      const B = parseFecha(b.fecha)
+
+      if (!A && !B) return 0
+      if (!A) return 1
+      if (!B) return -1
+      return (A - B) * dir
+    }
+
+    const A = normalizeValue(a[sort.key])
+    const B = normalizeValue(b[sort.key])
+
+    // — / undefined siempre abajo
+    if (A === null && B === null) return 0
+    if (A === null) return 1
+    if (B === null) return -1
+
+    // Numérico
+    if (typeof A === "number" && typeof B === "number") {
+      const diff = A - B
+      return diff === 0 ? 0 : diff * dir
+    }
+
+    // Texto
+    return A > B ? dir : A < B ? -dir : 0
   })
 })
 
 /* ===========================
-   COLORES BADGE
+   BADGES
 =========================== */
 function badgeColor(valor) {
   if (!isNaN(valor)) {
@@ -218,7 +264,6 @@ function badgeColor(valor) {
 </script>
 
 <style>
-/* Scroll Pro */
 .custom-scroll::-webkit-scrollbar {
   width: 8px;
 }
@@ -230,18 +275,11 @@ function badgeColor(valor) {
   background: #9f9f9f;
 }
 
-/* ===========================
-   ➤ FLECHAS DE ORDENAMIENTO
-=========================== */
-
-/* Ocultas SIEMPRE, incluso si la columna está activa */
 .sort-arrow {
   opacity: 0 !important;
   margin-left: 4px;
   transition: opacity 0.15s ease;
 }
-
-/* Mostrar SOLO al pasar el mouse */
 .th-sort:hover .sort-arrow {
   opacity: 1 !important;
 }
