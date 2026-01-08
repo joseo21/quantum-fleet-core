@@ -1,12 +1,23 @@
-<!-- TelemetriaTable.vue -->
 <template>
   <div class="space-y-4">
 
-    <!-- HEADER -->
-    <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
-      <SvgIcon name="signal" class="w-4 h-4 text-[#102372] dark:text-[#ff6600]" />
-      Telemetría Reciente
-    </h3>
+    <!-- HEADER + BOTÓN -->
+    <div class="flex items-center justify-between">
+      <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
+        <SvgIcon name="signal" class="w-4 h-4 text-[#102372] dark:text-[#ff6600]" />
+        Telemetría Reciente
+      </h3>
+
+      <button
+        @click="showScriptModal = true"
+        class="px-3 py-1.5 text-sm rounded-lg
+               bg-[#102372] hover:bg-[#102372]/90
+               dark:bg-[#ff6600] dark:hover:bg-[#ff6600]/90
+               text-white transition"
+      >
+        Insertar script
+      </button>
+    </div>
 
     <div class="rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
 
@@ -20,12 +31,11 @@
         </div>
       </div>
 
-      <!-- CONTENEDOR CON ALTURA FIJA -->
+      <!-- CONTENEDOR -->
       <div
         class="divide-y divide-gray-200 dark:divide-gray-700 overflow-y-auto"
         style="max-height: 250px;"
       >
-        <!-- FILAS -->
         <div
           v-for="(item, index) in visibleData"
           :key="index"
@@ -46,7 +56,6 @@
           </span>
         </div>
 
-        <!-- SIN DATOS -->
         <div
           v-if="data.length === 0"
           class="px-4 py-6 text-center text-gray-500 dark:text-gray-400"
@@ -54,7 +63,6 @@
           No hay datos de telemetría disponibles.
         </div>
       </div>
-
     </div>
 
     <!-- CONTADOR -->
@@ -62,10 +70,9 @@
       Mostrando {{ visibleData.length }} de {{ data.length }} datos
     </div>
 
-    <!-- SELECTOR DE CANTIDAD (IZQUIERDA) -->
+    <!-- SELECTOR -->
     <div class="flex items-center gap-2 text-sm select-none">
       <span class="text-gray-600 dark:text-gray-300">Mostrar:</span>
-
       <select
         v-model.number="itemsLimit"
         class="border rounded-md px-2 py-1 text-sm
@@ -80,26 +87,34 @@
       </select>
     </div>
 
+    <!-- MODAL EXTERNO -->
+    <InsertScriptModal
+      :open="showScriptModal"
+      @close="showScriptModal = false"
+    />
+
   </div>
 </template>
 
 <script setup>
 import { defineProps, ref, computed } from "vue";
 import SvgIcon from "@/components/icons/SvgIcon.vue";
+import InsertScriptModal from "@/components/DispositivosUi/SidebarUi/InsertScriptModal.vue";
 
 const props = defineProps({
-  data: Array
+  data: {
+    type: Array,
+    default: () => []
+  }
 });
 
-// ⭐ Cantidad visible seleccionada por el usuario (5 por defecto)
 const itemsLimit = ref(5);
+const showScriptModal = ref(false);
 
-// ⭐ Datos visibles dependiendo del límite
 const visibleData = computed(() =>
   props.data.slice(0, itemsLimit.value)
 );
 
-// ⭐ Formato fecha
 function formatDate(ts) {
   if (!ts) return "—";
   return new Date(ts).toLocaleString("es-CL");

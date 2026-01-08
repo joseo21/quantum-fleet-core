@@ -67,7 +67,7 @@
 
                 <ControlDeVersiones v-if="activeTab === 'versiones'" :versions="localDevice.versions"
                     @confirm-rollback="openRollbackModal" @show-details="openDetailsModal" />
-                <ScriptModificador v-else-if="activeTab === 'modificar'" :device="localDevice" />
+
 
 
             </div>
@@ -123,7 +123,7 @@ import ControlDeVersiones from '@/components/DispositivosUi/SidebarUi/ControlDeV
 import RollbackConfirmModal from '@/components/DispositivosUi/SidebarUi/ModalConfirmacion.vue'
 import ModalDetalles from '@/components/DispositivosUi/SidebarUi/ModalDetalles.vue'
 import telemetriaDummyData from "@/dummy/telemetriaDummy.js";
-import ScriptModificador from '@/components/DispositivosUi/SidebarUi/ScriptModificador.vue'
+
 
 
 
@@ -153,7 +153,7 @@ const tabs = [
     { label: 'URL', value: 'url' },
     { label: 'Último Dato', value: 'telemetria' },
     { label: 'Control de Versiones', value: 'versiones' },
-    { label: 'Modificar Variables', value: 'modificar' }
+
 ]
 
 const localDevice = ref({})

@@ -1,36 +1,69 @@
 <template>
   <div class="h-full flex flex-col bg-gray-50">
 
-    <!-- BARRA SUPERIOR -->
-    <div class="shrink-0 border-b bg-white flex items-center justify-between px-4 h-12">
+    <!-- =========================
+         BARRA SUPERIOR (RESPONSIVE)
+    ========================== -->
+    <div
+      class="shrink-0 border-b bg-white px-4 py-2
+             flex flex-col gap-2
+             md:flex-row md:items-center md:justify-between"
+    >
 
-      <AlertsFilters v-model:device="deviceFilter" v-model:variable="variableFilter" v-model:assignee="assigneeFilter"
-        :devices="devices" />
-
+      <!-- FILTROS -->
+      <div class="w-full md:flex-1 min-w-0">
+        <AlertsFilters
+          v-model:device="deviceFilter"
+          v-model:variable="variableFilter"
+          v-model:assignee="assigneeFilter"
+          :devices="devices"
+        />
+      </div>
 
       <!-- BOTÓN CREAR ALERTA -->
-      <button class="ml-4 h-8 px-3 rounded-lg text-sm font-medium
+      <button
+        class="w-full md:w-auto md:ml-4
+               h-9 px-4 rounded-lg text-sm font-medium
                bg-[#102372] text-white hover:bg-[#0c1c5a]
-               transition" @click="showCreateModal = true">
+               transition"
+        @click="showCreateModal = true"
+      >
         + Crear alerta
       </button>
+
     </div>
 
-    <!-- LISTADO -->
+    <!-- =========================
+         LISTADO
+    ========================== -->
     <div class="flex-1 overflow-y-auto">
       <div class="px-4 py-2 space-y-2">
 
-        <AlertCard v-for="alert in filteredAlerts" :key="alert.id" :alert="alert" @view-history="openHistory" />
+        <AlertCard
+          v-for="alert in filteredAlerts"
+          :key="alert.id"
+          :alert="alert"
+          @view-history="openHistory"
+        />
 
         <AlertsEmpty v-if="filteredAlerts.length === 0" />
+
       </div>
     </div>
 
     <!-- MODAL CREAR ALERTA -->
-    <CreateAlertModal v-if="showCreateModal" @close="showCreateModal = false" @save="createAlertRule" />
+    <CreateAlertModal
+      v-if="showCreateModal"
+      @close="showCreateModal = false"
+      @save="createAlertRule"
+    />
 
     <!-- MODAL HISTORIAL -->
-    <AlertHistoryModal v-if="selectedAlert" :alert="selectedAlert" @close="selectedAlert = null" />
+    <AlertHistoryModal
+      v-if="selectedAlert"
+      :alert="selectedAlert"
+      @close="selectedAlert = null"
+    />
 
   </div>
 </template>
@@ -68,7 +101,7 @@ const devices = [
 /* =========================
  * FILTROS
  * ========================= */
-const deviceFilter = ref("")     // 🔴 NUEVO
+const deviceFilter = ref("")
 const variableFilter = ref("")
 const assigneeFilter = ref(null)
 
@@ -84,25 +117,21 @@ const selectedAlert = ref(null)
 const alerts = ref([])
 
 /* =========================
- * FILTRADO CORRECTO
+ * FILTRADO
  * ========================= */
 const filteredAlerts = computed(() => {
   return alerts.value.filter(a => {
 
-    /* 🔹 FILTRO POR DISPOSITIVO */
     if (deviceFilter.value && a.device_id !== deviceFilter.value) {
       return false
     }
 
-    /* 🔹 FILTRO POR VARIABLE
-       - solo aplica si la alerta tiene variable */
     if (variableFilter.value) {
       if (!a.variable || a.variable !== variableFilter.value) {
         return false
       }
     }
 
-    /* 🔹 FILTRO POR RESPONSABLE */
     if (assigneeFilter.value && a.assignee !== assigneeFilter.value) {
       return false
     }
@@ -112,7 +141,7 @@ const filteredAlerts = computed(() => {
 })
 
 /* =========================
- * ABRIR HISTORIAL
+ * HISTORIAL
  * ========================= */
 const openHistory = (alert) => {
   selectedAlert.value = alert
@@ -127,24 +156,18 @@ const createAlertRule = (rule) => {
 
   const newAlert = {
     id: crypto.randomUUID(),
-
     device_id: device.id,
     device_name: device.name,
-
     variable: rule.variable ?? null,
     assignee: rule.assignee ?? null,
     created_at: now.toISOString(),
-
     condition: rule.condition,
     history: []
   }
 
-  /* ===========================
-   * FUERA DE RANGO (GLOBAL)
-   * =========================== */
+  // FUERA DE RANGO
   if (newAlert.condition.type === "max") {
     const { limit_value, limit_type } = rule.condition
-
     const values =
       limit_type === "min"
         ? [limit_value - 5, limit_value - 2]
@@ -168,9 +191,7 @@ const createAlertRule = (rule) => {
     )
   }
 
-  /* ===========================
-   * TIMEOUT
-   * =========================== */
+  // TIMEOUT
   if (newAlert.condition.type === "timeout") {
     newAlert.history.push(
       {
@@ -186,9 +207,7 @@ const createAlertRule = (rule) => {
     )
   }
 
-  /* ===========================
-   * CONSUMO ACUMULADO
-   * =========================== */
+  // CONSUMO ACUMULADO
   if (newAlert.condition.type === "volume_accumulated") {
     newAlert.history.push(
       {

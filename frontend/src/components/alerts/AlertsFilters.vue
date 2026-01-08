@@ -1,11 +1,12 @@
 <template>
-  <div class="flex items-center gap-3">
+  <div
+    class="w-full flex flex-col gap-2
+           md:flex-row md:items-center md:gap-3"
+  >
 
     <!-- DISPOSITIVO -->
     <select
-      class="h-8 px-3 text-sm rounded-lg border
-             bg-gray-50 text-gray-700
-             focus:ring-2 focus:ring-[#102372]/40"
+      class="filter-input"
       :value="device"
       @change="$emit('update:device', $event.target.value)"
     >
@@ -21,16 +22,13 @@
 
     <!-- VARIABLE -->
     <select
-      class="h-8 px-3 text-sm rounded-lg border
-             bg-gray-50 text-gray-700
-             disabled:bg-gray-100 disabled:text-gray-400
-             focus:ring-2 focus:ring-[#102372]/40"
+      class="filter-input"
       :disabled="!device"
       :value="variable"
       @change="$emit('update:variable', $event.target.value)"
     >
       <option value="">
-        {{ device ? "Variable: Todas" : "Selecciona dispositivo" }}
+        {{ device ? "Variable: Todas" : "Selecciona un dispositivo primero" }}
       </option>
 
       <option
@@ -45,9 +43,7 @@
     <!-- RESPONSABLE -->
     <input
       type="text"
-      class="h-8 px-3 text-sm rounded-lg border
-             bg-gray-50 text-gray-700 w-[220px]
-             focus:ring-2 focus:ring-[#102372]/40"
+      class="filter-input"
       placeholder="Responsable"
       :value="assignee ?? ''"
       @input="$emit('update:assignee', $event.target.value || null)"
@@ -111,3 +107,40 @@ const variableLabel = v => ({
   temperature: "Temperatura"
 }[v] ?? v)
 </script>
+
+<style scoped>
+/* ===== INPUT BASE ===== */
+.filter-input {
+  width: 100%;
+  height: 36px;
+  padding: 0 12px;
+  font-size: 0.875rem;
+  border-radius: 0.5rem;
+  border: 1px solid #d1d5db;
+  background: #f9fafb;
+  color: #374151;
+  transition: background .15s, box-shadow .15s, border-color .15s;
+}
+
+.filter-input:focus {
+  outline: none;
+  border-color: #102372;
+  box-shadow: 0 0 0 2px rgba(16, 35, 114, 0.35);
+}
+
+/* ✅ ESTADO DESHABILITADO (CLAVE) */
+.filter-input:disabled {
+  background: #f3f4f6;
+  color: #9ca3af;
+  border-color: #e5e7eb;
+  cursor: not-allowed;
+}
+
+/* ===== DESKTOP ===== */
+@media (min-width: 768px) {
+  .filter-input {
+    width: auto;
+    min-width: 180px;
+  }
+}
+</style>
